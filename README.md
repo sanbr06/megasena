@@ -102,3 +102,21 @@ python -m app.math_core.cli   --lottery megasena   --games 20   --seed 42   --su
 
 Esse núcleo será a base para Monte Carlo, backtesting e otimização de
 carteiras por orçamento.
+
+## Monte Carlo Engine
+
+O Monte Carlo Engine avalia carteiras em sorteios aleatórios simulados.
+Ele mede a distribuição do melhor número de acertos da carteira e calcula
+intervalos de confiança para probabilidades estimadas.
+
+Exemplo:
+
+```bash
+python -m app.math_core.monte_carlo_cli   --lottery megasena   --games 20   --trials 100000   --threshold 4   --seed 42
+```
+
+A simulação é reproduzível por seed, executada em chunks para controlar
+memória e validada nos testes contra probabilidades combinatórias exatas.
+
+O resultado é uma estimativa de comportamento da carteira sob sorteios
+aleatórios, não uma previsão de resultados futuros.
