@@ -67,10 +67,11 @@ def main():
             "ao limite de combinações disjuntas."
         ),
         "scope": (
-            "Esta versão mede probabilidade de pelo menos um "
-            "prêmio 4+. Multiplicidade de prêmios, retorno "
-            "financeiro esperado e valor dos rateios ainda não "
-            "fazem parte do modelo."
+            "O planner separa a probabilidade de qualquer prêmio, "
+            "a multiplicidade esperada e a concentração dos "
+            "prêmios. Retorno financeiro e variância de pagamento "
+            "exigem um cenário explícito de rateios e não são "
+            "inferidos pelo orçamento."
         ),
     }
 

@@ -1,5 +1,9 @@
 from dataclasses import asdict, dataclass
 from math import comb
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.math_core.prize_multiplicity import PrizeRiskProfile
 
 from app.lotteries import LOTTERIES
 from app.math_core.exact_packing import (
@@ -29,6 +33,7 @@ class MegaSenaBetProfile:
     quadra_plus_probability: float
     quadra_plus_disjoint_upper_bound: float
     quadra_plus_efficiency_vs_disjoint_bound: float
+    prize_risk: "PrizeRiskProfile"
 
 
 @dataclass(frozen=True)
@@ -44,6 +49,7 @@ class SimpleBudgetPlan:
     globally_optimal_quadra_plus: bool
     max_pairwise_overlap: int | None
     generated_games: list[tuple[int, ...]] | None
+    prize_risk: "PrizeRiskProfile | None"
 
 
 @dataclass(frozen=True)
@@ -99,6 +105,10 @@ def megasena_at_least_hits_probability(
 
 
 def profile_megasena_system_bet(marked_numbers):
+    from app.math_core.prize_multiplicity import (
+        profile_megasena_system_risk,
+    )
+
     marked_numbers = _validate_marked_numbers(marked_numbers)
 
     simple_equivalents = comb(marked_numbers, 6)
@@ -143,6 +153,9 @@ def profile_megasena_system_bet(marked_numbers):
             disjoint_upper_bound
         ),
         quadra_plus_efficiency_vs_disjoint_bound=efficiency,
+        prize_risk=profile_megasena_system_risk(
+            marked_numbers
+        ),
     )
 
 
@@ -187,6 +200,7 @@ def plan_megasena_budget(
     certified_probability = None
     globally_optimal = False
     max_pairwise_overlap = None
+    prize_risk = None
 
     if 0 < games <= certificate_game_limit:
         generated_games = (
@@ -212,6 +226,17 @@ def plan_megasena_budget(
             certificate.max_pairwise_overlap
         )
 
+        # Imported lazily because the risk module reuses the pricing
+        # constants and validation defined in this module.
+        from app.math_core.prize_multiplicity import (
+            profile_certified_diversified_simples,
+        )
+
+        prize_risk = profile_certified_diversified_simples(
+            games,
+            seed=seed,
+        )
+
     simple_plan = SimpleBudgetPlan(
         budget_cents=budget_cents,
         simple_game_cost_cents=(
@@ -230,6 +255,7 @@ def plan_megasena_budget(
         globally_optimal_quadra_plus=globally_optimal,
         max_pairwise_overlap=max_pairwise_overlap,
         generated_games=generated_games,
+        prize_risk=prize_risk,
     )
 
     affordable = [

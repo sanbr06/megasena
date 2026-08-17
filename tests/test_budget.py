@@ -107,6 +107,14 @@ def test_120_reais_produces_20_game_global_optimum_certificate():
             plan.quadra_plus_disjoint_upper_bound
         )
     )
+    assert plan.prize_risk is not None
+    assert plan.prize_risk.any_prize_probability == pytest.approx(
+        plan.certified_quadra_plus_probability
+    )
+    assert plan.prize_risk.multiple_prizes_probability == 0.0
+    assert plan.prize_risk.expected_prize_tickets == pytest.approx(
+        plan.prize_risk.any_prize_probability
+    )
 
 
 def test_100_reais_uses_96_and_leaves_4():
@@ -127,3 +135,22 @@ def test_affordable_system_bets_for_120_reais():
         bet.marked_numbers
         for bet in result.affordable_single_system_bets
     ] == [6, 7]
+
+    seven = result.affordable_single_system_bets[1]
+    assert seven.prize_risk.simple_equivalents == 7
+    assert (
+        seven.prize_risk.any_prize_probability
+        == pytest.approx(seven.quadra_plus_probability)
+    )
+    assert seven.prize_risk.multiple_prizes_probability > 0
+
+
+def test_uncertified_simple_plan_does_not_claim_exact_risk_profile():
+    result = plan_megasena_budget(
+        12_600,
+        certificate_game_limit=20,
+    )
+
+    assert result.simple_plan.games == 21
+    assert result.simple_plan.globally_optimal_quadra_plus is False
+    assert result.simple_plan.prize_risk is None
