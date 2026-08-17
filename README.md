@@ -71,10 +71,11 @@ combinações concretas. No Dia de Sorte, `lucky_month` aparece em
 `extra_selection`, separado das sete dezenas. A geração é limitada a 1.000
 jogos por requisição para manter o endpoint local previsível.
 
-Esse endpoint também aceita `allowed_sum_min` e `allowed_sum_max` como restrição
-experimental opcional. A amostragem permanece uniforme e reproduzível dentro do
-espaço filtrado. O filtro controla somente a composição da carteira: não prevê
-resultados nem aumenta a probabilidade futura, e deve ser avaliado contra o
+Esse endpoint também aceita `allowed_sum_min`, `allowed_sum_max`,
+`allowed_odd_min` e `allowed_odd_max` como restrições experimentais opcionais.
+A amostragem permanece uniforme e reproduzível dentro do espaço filtrado. Os
+filtros controlam somente a composição da carteira: não preveem
+resultados nem aumentam a probabilidade futura, e devem ser avaliados contra o
 baseline uniforme no backtest walk-forward.
 
 O planner comparativo da Mega-Sena também devolve combinações concretas para
