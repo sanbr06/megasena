@@ -1,6 +1,12 @@
 const form = document.querySelector("#budget-form");
 const status = document.querySelector("#status");
 const results = document.querySelector("#results");
+const lotteryNames = {
+  megasena: "Mega-Sena",
+  lotofacil: "Lotofácil",
+  quina: "Quina",
+  diadesorte: "Dia de Sorte",
+};
 
 const formatMoney = (cents) => new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -34,6 +40,7 @@ form.addEventListener("submit", async (event) => {
   status.textContent = "Calculando…";
 
   const budgetText = document.querySelector("#budget").value;
+  const lottery = document.querySelector("#lottery").value;
   const budgetCents = Math.round(Number(budgetText) * 100);
   const seed = Number(document.querySelector("#seed").value);
   const contestText = document.querySelector("#contest-number").value;
@@ -44,7 +51,10 @@ form.addEventListener("submit", async (event) => {
   }
 
   try {
-    const response = await fetch("/api/v1/megasena/budget-plan", {
+    const endpoint = lottery === "megasena"
+      ? "/api/v1/megasena/budget-plan"
+      : `/api/v1/lotteries/${lottery}/simple-budget-plan`;
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -57,25 +67,28 @@ form.addEventListener("submit", async (event) => {
       throw new Error(payload.error?.message || payload.error || "Falha ao calcular o plano.");
     }
 
-    const plan = payload.data.simple_plan;
+    const isMegaSena = lottery === "megasena";
+    const plan = isMegaSena ? payload.data.simple_plan : payload.data;
     const context = payload.data.generation_context;
     document.querySelector("#portfolio-context").textContent = context.contest_number === null
-      ? "Mega-Sena · carteira analítica sem vínculo com concurso específico"
-      : `Mega-Sena · concurso ${context.contest_number}`;
+      ? `${lotteryNames[lottery]} · carteira analítica sem vínculo com concurso específico`
+      : `${lotteryNames[lottery]} · concurso ${context.contest_number}`;
     document.querySelector("#used-budget").textContent = formatMoney(plan.cost_cents);
     document.querySelector("#unspent-budget").textContent = formatMoney(plan.unspent_cents);
     document.querySelector("#games").textContent = plan.games;
     document.querySelector("#used-seed").textContent = context.seed;
     document.querySelector("#jackpot-probability").textContent =
       formatProbability(plan.jackpot_probability);
-    document.querySelector("#any-prize-probability").textContent =
-      formatOptionalProbability(plan.prize_risk?.any_prize_probability);
-    document.querySelector("#multiple-prizes-probability").textContent =
-      formatOptionalProbability(plan.prize_risk?.multiple_prizes_probability);
+    document.querySelector("#any-prize-probability").textContent = isMegaSena
+      ? formatOptionalProbability(plan.prize_risk?.any_prize_probability)
+      : "Não calculada para esta modalidade";
+    document.querySelector("#multiple-prizes-probability").textContent = isMegaSena
+      ? formatOptionalProbability(plan.prize_risk?.multiple_prizes_probability)
+      : "Não calculada para esta modalidade";
 
     const comparisonBody = document.querySelector("#structure-comparison");
     comparisonBody.replaceChildren();
-    appendComparisonRow(comparisonBody, [
+    if (isMegaSena) appendComparisonRow(comparisonBody, [
       "Jogos simples diversificados",
       String(plan.games),
       formatMoney(plan.cost_cents),
@@ -101,13 +114,21 @@ form.addEventListener("submit", async (event) => {
     comparisonEmpty.textContent = hasSystemBet
       ? ""
       : "Nenhuma aposta sistêmica cabe no orçamento informado.";
+    document.querySelector("#system-comparison").hidden = !isMegaSena;
 
     const gameList = document.querySelector("#generated-games");
     gameList.replaceChildren();
-    for (const game of plan.generated_games || []) {
+    for (const generatedGame of plan.generated_games || []) {
+      const numbers = Array.isArray(generatedGame) ? generatedGame : generatedGame.numbers;
       const item = document.createElement("li");
       item.className = "game-card";
-      item.textContent = game.map((number) => String(number).padStart(2, "0")).join(" · ");
+      item.textContent = numbers.map((number) => String(number).padStart(2, "0")).join(" · ");
+      const luckyMonth = generatedGame.extra_selection?.lucky_month;
+      if (luckyMonth) {
+        const extra = document.createElement("span");
+        extra.textContent = `Mês de Sorte: ${luckyMonth}`;
+        item.append(extra);
+      }
       gameList.append(item);
     }
 
@@ -115,10 +136,12 @@ form.addEventListener("submit", async (event) => {
     gameList.hidden = !hasGeneratedGames;
     document.querySelector("#generated-games-title").hidden = !hasGeneratedGames;
     const explanation = document.querySelector("#portfolio-explanation");
-    if (hasGeneratedGames) {
+    if (plan.games === 0) {
+      explanation.textContent = `O orçamento informado não comporta uma aposta simples de ${lotteryNames[lottery]} nesta versão de preços.`;
+    } else if (hasGeneratedGames && isMegaSena) {
       explanation.textContent = "As combinações foram distribuídas para limitar a sobreposição entre pares de jogos. Isso melhora a cobertura certificada de Quadra+, mas não prevê dezenas nem altera a chance de Sena para a mesma quantidade de combinações simples distintas.";
-    } else if (plan.games === 0) {
-      explanation.textContent = "O orçamento informado não comporta uma aposta simples de Mega-Sena nesta versão de preços.";
+    } else if (hasGeneratedGames) {
+      explanation.textContent = "As combinações foram geradas de forma uniforme e reproduzível pelo seed informado. Elas não preveem resultados nem melhoram a probabilidade de uma combinação individual.";
     } else {
       explanation.textContent = "O orçamento excede o limite de geração certificada desta versão. As métricas sem certificado não são apresentadas como se fossem uma carteira concreta.";
     }

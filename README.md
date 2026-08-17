@@ -36,13 +36,14 @@ python run.py
 
 API: `/health`, `/api/results/<lottery>`, `/api/results/update/<lottery>`, `/api/generate/<lottery>`, `/api/stats/<lottery>`, `/api/train/<lottery>`.
 
-A interface web mínima em `/` permite executar o planner de orçamento v1 no
-navegador e comparar jogos simples diversificados com todas as apostas
-sistêmicas que cabem no mesmo orçamento. A comparação mostra equivalentes
-simples, custo, saldo e probabilidades exatas sem recomendar uma estrutura
-como superior. Um número de concurso opcional identifica o contexto da carteira,
-mas não altera sua geração. O token informado fica somente no formulário e não
-é armazenado.
+A interface web mínima em `/` permite gerar carteiras concretas de Mega-Sena,
+Lotofácil, Quina e Dia de Sorte. Ela mostra custo, saldo, seed reproduzível e
+probabilidade exata do prêmio principal; no Dia de Sorte, o Mês de Sorte é
+exibido separadamente das dezenas. Para Mega-Sena, também compara jogos simples
+diversificados com as apostas sistêmicas que cabem no mesmo orçamento, sem
+recomendar uma estrutura como superior. Um número de concurso opcional identifica
+o contexto da carteira, mas não altera sua geração. O token informado fica
+somente no formulário e não é armazenado.
 
 Use `Authorization: Bearer <API_TOKEN>` quando `API_TOKEN` estiver configurado.
 

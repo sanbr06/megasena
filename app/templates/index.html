@@ -22,6 +22,14 @@
     <section class="panel" aria-labelledby="planner-title">
       <h2 id="planner-title">Orçamento</h2>
       <form id="budget-form">
+        <label for="lottery">Modalidade</label>
+        <select id="lottery" name="lottery">
+          <option value="megasena">Mega-Sena</option>
+          <option value="lotofacil">Lotofácil</option>
+          <option value="quina">Quina</option>
+          <option value="diadesorte">Dia de Sorte</option>
+        </select>
+
         <label for="budget">Valor disponível (R$)</label>
         <input id="budget" name="budget" type="number" min="0" step="0.01" value="120.00" required>
 
@@ -62,7 +70,7 @@
       <p id="portfolio-explanation" class="note"></p>
       <h3 id="generated-games-title">Combinações geradas</h3>
       <ol id="generated-games" class="game-list" aria-label="Jogos gerados"></ol>
-      <section aria-labelledby="comparison-title">
+      <section id="system-comparison" aria-labelledby="comparison-title">
         <h3 id="comparison-title">Simples diversificados × aposta sistêmica</h3>
         <p class="note">
           A tabela compara estruturas que cabem no mesmo orçamento. Ela não recomenda

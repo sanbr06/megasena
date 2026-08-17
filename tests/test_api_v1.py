@@ -219,6 +219,21 @@ def test_dia_de_sorte_models_lucky_month_separately_and_reproducibly(client):
     assert all(len(game["numbers"]) == 7 for game in games)
 
 
+def test_simple_budget_plan_preserves_contest_context(client):
+    response = client.post(
+        "/api/v1/lotteries/quina/simple-budget-plan",
+        json={"budget_cents": 600, "seed": 17, "contest_number": 7000},
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    assert response.json["data"]["generation_context"] == {
+        "lottery": "quina",
+        "contest_number": 7000,
+        "seed": 17,
+    }
+
+
 def test_simple_budget_plan_returns_structured_domain_errors(client):
     unknown = client.post(
         "/api/v1/lotteries/inexistente/simple-budget-plan",
