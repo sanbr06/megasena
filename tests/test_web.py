@@ -5,10 +5,11 @@ def test_home_exposes_minimal_budget_planner(client):
     assert response.content_type.startswith("text/html")
     assert b'id="budget-form"' in response.data
     assert b'id="seed"' in response.data
+    assert b'id="contest-number"' in response.data
     assert b'id="generated-games"' in response.data
     assert b'id="structure-comparison"' in response.data
     assert b"Simples diversificados" in response.data
-    assert b"sem v\xc3\xadnculo com concurso espec\xc3\xadfico" in response.data
+    assert b"n\xc3\xa3o influencia as combina\xc3\xa7\xc3\xb5es geradas" in response.data
     assert b'/api/v1/megasena/budget-plan' not in response.data
     assert b"n\xc3\xa3o prev\xc3\xaa" in response.data
 
@@ -27,6 +28,8 @@ def test_web_assets_are_available(client):
     assert b"system.simple_equivalents" in script.data
     assert b"payload.data.budget_cents - system.cost_cents" in script.data
     assert b"seed" in script.data
+    assert b"generation_context" in script.data
+    assert b"contest_number" in script.data
     assert manifest.status_code == 200
     assert manifest.json["start_url"] == "/"
     assert manifest.json["display"] == "standalone"

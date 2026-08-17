@@ -40,7 +40,9 @@ A interface web mínima em `/` permite executar o planner de orçamento v1 no
 navegador e comparar jogos simples diversificados com todas as apostas
 sistêmicas que cabem no mesmo orçamento. A comparação mostra equivalentes
 simples, custo, saldo e probabilidades exatas sem recomendar uma estrutura
-como superior. O token informado fica somente no formulário e não é armazenado.
+como superior. Um número de concurso opcional identifica o contexto da carteira,
+mas não altera sua geração. O token informado fica somente no formulário e não
+é armazenado.
 
 Use `Authorization: Bearer <API_TOKEN>` quando `API_TOKEN` estiver configurado.
 

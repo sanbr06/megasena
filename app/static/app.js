@@ -36,7 +36,12 @@ form.addEventListener("submit", async (event) => {
   const budgetText = document.querySelector("#budget").value;
   const budgetCents = Math.round(Number(budgetText) * 100);
   const seed = Number(document.querySelector("#seed").value);
+  const contestText = document.querySelector("#contest-number").value;
   const token = document.querySelector("#token").value;
+  const requestBody = {budget_cents: budgetCents, seed};
+  if (contestText !== "") {
+    requestBody.contest_number = Number(contestText);
+  }
 
   try {
     const response = await fetch("/api/v1/megasena/budget-plan", {
@@ -45,7 +50,7 @@ form.addEventListener("submit", async (event) => {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({budget_cents: budgetCents, seed}),
+      body: JSON.stringify(requestBody),
     });
     const payload = await response.json();
     if (!response.ok) {
@@ -53,10 +58,14 @@ form.addEventListener("submit", async (event) => {
     }
 
     const plan = payload.data.simple_plan;
+    const context = payload.data.generation_context;
+    document.querySelector("#portfolio-context").textContent = context.contest_number === null
+      ? "Mega-Sena · carteira analítica sem vínculo com concurso específico"
+      : `Mega-Sena · concurso ${context.contest_number}`;
     document.querySelector("#used-budget").textContent = formatMoney(plan.cost_cents);
     document.querySelector("#unspent-budget").textContent = formatMoney(plan.unspent_cents);
     document.querySelector("#games").textContent = plan.games;
-    document.querySelector("#used-seed").textContent = seed;
+    document.querySelector("#used-seed").textContent = context.seed;
     document.querySelector("#jackpot-probability").textContent =
       formatProbability(plan.jackpot_probability);
     document.querySelector("#any-prize-probability").textContent =
