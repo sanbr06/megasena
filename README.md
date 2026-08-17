@@ -269,13 +269,23 @@ Exemplo:
 python -m app.math_core.budget_cli --budget 120
 ```
 
+Um cenário explícito de rateios adiciona valor esperado e variância a cada
+alternativa que possui perfil de risco exato:
+
+```bash
+python -m app.math_core.budget_cli \
+  --budget 42 \
+  --sena-payout 5000000 \
+  --quina-payout 50000 \
+  --quadra-payout 1000
+```
+
 A saída inclui orçamento usado, saldo não utilizado, quantidade de jogos,
 probabilidade de Sena, probabilidade certificada de Quadra+ e perfis das
 apostas únicas com mais dezenas que cabem no mesmo orçamento.
 
-Esta versão ainda não compara multiplicidade de prêmios, valor esperado,
-rateios reais ou retorno financeiro. Esses itens pertencem à próxima camada
-do Portfolio Planner.
+Os rateios são cenários fornecidos pelo analista, não estimativas de valores
+futuros. Sem as três faixas, o planner não infere retorno financeiro.
 
 ## Prize Multiplicity and Risk
 
