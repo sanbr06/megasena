@@ -9,6 +9,12 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b'id="seed"' in response.data
     assert b'id="contest-number"' in response.data
     assert b'id="generated-games"' in response.data
+    assert b'id="portfolio-actions"' in response.data
+    assert b'id="copy-games"' in response.data
+    assert b'id="export-txt"' in response.data
+    assert b'id="export-csv"' in response.data
+    assert b'id="caixa-handoff"' in response.data
+    assert "não registra uma aposta".encode() in response.data
     assert b'id="structure-comparison"' in response.data
     assert b'id="history-form"' in response.data
     assert b'id="history-lottery"' in response.data
@@ -46,6 +52,12 @@ def test_web_assets_are_available(client):
     assert b"seed" in script.data
     assert b"generation_context" in script.data
     assert b"contest_number" in script.data
+    assert b"portfolioText" in script.data
+    assert b"portfolioCsv" in script.data
+    assert b"navigator.clipboard.writeText" in script.data
+    assert b"URL.createObjectURL" in script.data
+    assert b"caixaLotteryPages[lottery]" in script.data
+    assert "não comprova registro de aposta".encode() in script.data
     assert b'/history-explorer' in script.data
     assert b'new URLSearchParams()' in script.data
     assert b'draws_since_last_seen' in script.data

@@ -45,6 +45,11 @@ recomendar uma estrutura como superior. Um número de concurso opcional identifi
 o contexto da carteira, mas não altera sua geração. O token informado fica
 somente no formulário e não é armazenado.
 
+As carteiras concretas podem ser copiadas ou exportadas em TXT/CSV com modalidade,
+concurso, seed, versão de preços e custo. A interface também oferece um link para a
+página oficial da modalidade na CAIXA. Essas ações não registram aposta: a conferência
+e eventual registro continuam exclusivamente nos canais oficiais.
+
 Use `Authorization: Bearer <API_TOKEN>` quando `API_TOKEN` estiver configurado.
 
 Carteiras simples reproduzíveis das quatro modalidades estão disponíveis em
