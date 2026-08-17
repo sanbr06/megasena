@@ -70,7 +70,7 @@
             </div>
           </div>
           <small>
-            Filtrar soma, quantidade de ímpares ou sobreposição apenas define a estrutura da carteira.
+            Filtrar soma, quantidade de ímpares, repetição ou sobreposição apenas define a estrutura da carteira.
             Não prevê resultados nem aumenta a chance futura; avalie estratégias somente
             contra o baseline uniforme.
           </small>
@@ -84,6 +84,20 @@
               <input id="allowed-odd-max" type="number" min="0" step="1">
             </div>
           </div>
+          <div class="filter-grid">
+            <div>
+              <label for="allowed-repeat-min">Mínimo repetido do concurso anterior</label>
+              <input id="allowed-repeat-min" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label for="allowed-repeat-max">Máximo repetido do concurso anterior</label>
+              <input id="allowed-repeat-max" type="number" min="0" step="1">
+            </div>
+          </div>
+          <small>
+            Esta restrição exige o número do concurso e compara cada jogo somente com o
+            resultado oficial armazenado do concurso imediatamente anterior.
+          </small>
           <div>
             <label for="allowed-max-overlap">Sobreposição máxima entre dois jogos</label>
             <input id="allowed-max-overlap" type="number" min="0" step="1">
