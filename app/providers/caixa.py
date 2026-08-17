@@ -21,9 +21,7 @@ class CaixaLotteryProvider:
         value = value.replace("\x00", "").strip()
         return value or None
 
-    def latest(self, lottery):
-        url = f"{self.base_url}/{lottery}"
-
+    def _fetch(self, url):
         try:
             response = self.session.get(
                 url,
@@ -38,6 +36,9 @@ class CaixaLotteryProvider:
         except (requests.RequestException, ValueError) as exc:
             raise ProviderError("provider_request_failed") from exc
 
+        return self._normalize(payload)
+
+    def _normalize(self, payload):
         if not isinstance(payload, dict):
             raise ProviderError("provider_invalid_payload")
 
@@ -47,7 +48,6 @@ class CaixaLotteryProvider:
             raise ProviderError("provider_invalid_contest") from exc
 
         numbers = payload.get("listaDezenas")
-
         if not isinstance(numbers, list):
             raise ProviderError("provider_invalid_numbers")
 
@@ -61,3 +61,17 @@ class CaixaLotteryProvider:
                 payload.get("nomeTimeCoracaoMesSorte")
             ),
         }
+
+    def latest(self, lottery):
+        return self._fetch(f"{self.base_url}/{lottery}")
+
+    def by_contest(self, lottery, contest):
+        try:
+            contest = int(contest)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("invalid_contest") from exc
+
+        if contest <= 0:
+            raise ValueError("invalid_contest")
+
+        return self._fetch(f"{self.base_url}/{lottery}/{contest}")
