@@ -150,3 +150,17 @@ def test_9_number_system_exceeds_current_certified_comparison_limit():
         ),
     ):
         compare_system_to_diversified(9)
+
+
+def test_zero_value_tier_is_not_a_positive_payout():
+    scenario = PayoutScenario(
+        sena_cents=1,
+        quina_cents=0,
+        quadra_cents=0,
+    )
+
+    risk = payout_risk_for_certified_simples(7, scenario)
+
+    assert risk.probability_positive_payout == pytest.approx(
+        7 / comb(60, 6)
+    )

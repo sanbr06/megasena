@@ -393,7 +393,8 @@ def payout_risk_for_certified_simples(
         payout_stddev_cents=sqrt(variance),
         probability_positive_payout=sum(
             probability
-            for probability, _ in tier_states
+            for probability, payout in tier_states
+            if payout > 0
         ),
         maximum_gross_payout_cents=max(
             scenario.sena_cents,

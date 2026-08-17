@@ -3,7 +3,11 @@ from math import comb
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.math_core.prize_multiplicity import PrizeRiskProfile
+    from app.math_core.prize_multiplicity import (
+        PayoutRisk,
+        PayoutScenario,
+        PrizeRiskProfile,
+    )
 
 from app.lotteries import LOTTERIES
 from app.math_core.exact_packing import (
@@ -34,6 +38,7 @@ class MegaSenaBetProfile:
     quadra_plus_disjoint_upper_bound: float
     quadra_plus_efficiency_vs_disjoint_bound: float
     prize_risk: "PrizeRiskProfile"
+    payout_risk: "PayoutRisk | None"
 
 
 @dataclass(frozen=True)
@@ -50,6 +55,7 @@ class SimpleBudgetPlan:
     max_pairwise_overlap: int | None
     generated_games: list[tuple[int, ...]] | None
     prize_risk: "PrizeRiskProfile | None"
+    payout_risk: "PayoutRisk | None"
 
 
 @dataclass(frozen=True)
@@ -104,8 +110,13 @@ def megasena_at_least_hits_probability(
     return favorable / MEGASENA_TOTAL_OUTCOMES
 
 
-def profile_megasena_system_bet(marked_numbers):
+def profile_megasena_system_bet(
+    marked_numbers,
+    *,
+    payout_scenario: "PayoutScenario | None" = None,
+):
     from app.math_core.prize_multiplicity import (
+        payout_risk_for_system,
         profile_megasena_system_risk,
     )
 
@@ -156,6 +167,14 @@ def profile_megasena_system_bet(marked_numbers):
         prize_risk=profile_megasena_system_risk(
             marked_numbers
         ),
+        payout_risk=(
+            payout_risk_for_system(
+                marked_numbers,
+                payout_scenario,
+            )
+            if payout_scenario is not None
+            else None
+        ),
     )
 
 
@@ -164,6 +183,7 @@ def plan_megasena_budget(
     *,
     seed=42,
     certificate_game_limit=20,
+    payout_scenario: "PayoutScenario | None" = None,
 ):
     budget_cents = int(budget_cents)
     certificate_game_limit = int(certificate_game_limit)
@@ -201,6 +221,7 @@ def plan_megasena_budget(
     globally_optimal = False
     max_pairwise_overlap = None
     prize_risk = None
+    payout_risk = None
 
     if 0 < games <= certificate_game_limit:
         generated_games = (
@@ -229,6 +250,7 @@ def plan_megasena_budget(
         # Imported lazily because the risk module reuses the pricing
         # constants and validation defined in this module.
         from app.math_core.prize_multiplicity import (
+            payout_risk_for_certified_simples,
             profile_certified_diversified_simples,
         )
 
@@ -236,6 +258,11 @@ def plan_megasena_budget(
             games,
             seed=seed,
         )
+        if payout_scenario is not None:
+            payout_risk = payout_risk_for_certified_simples(
+                games,
+                payout_scenario,
+            )
 
     simple_plan = SimpleBudgetPlan(
         budget_cents=budget_cents,
@@ -256,10 +283,14 @@ def plan_megasena_budget(
         max_pairwise_overlap=max_pairwise_overlap,
         generated_games=generated_games,
         prize_risk=prize_risk,
+        payout_risk=payout_risk,
     )
 
     affordable = [
-        profile_megasena_system_bet(marked_numbers)
+        profile_megasena_system_bet(
+            marked_numbers,
+            payout_scenario=payout_scenario,
+        )
         for marked_numbers in range(
             MEGASENA_MIN_MARKED_NUMBERS,
             MEGASENA_MAX_MARKED_NUMBERS + 1,
