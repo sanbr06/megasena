@@ -6,11 +6,7 @@ class ResultService:
         self.repository = repository
         self.provider = provider
 
-    def update_from_api(self, lottery):
-        if lottery not in LOTTERIES:
-            raise ValueError("unknown_lottery")
-
-        data = self.provider.latest(lottery)
+    def _persist(self, lottery, data):
         numbers = LOTTERIES[lottery].validate_numbers(data.get("dezenas", []))
 
         try:
@@ -19,7 +15,6 @@ class ResultService:
             raise ValueError("invalid_contest") from exc
 
         metadata = {}
-
         if data.get("mesSorte"):
             metadata["mes_sorte"] = data["mesSorte"]
 
@@ -32,6 +27,21 @@ class ResultService:
             metadata=metadata,
         )
         return data
+
+    def update_from_api(self, lottery):
+        if lottery not in LOTTERIES:
+            raise ValueError("unknown_lottery")
+
+        return self._persist(lottery, self.provider.latest(lottery))
+
+    def update_contest(self, lottery, contest):
+        if lottery not in LOTTERIES:
+            raise ValueError("unknown_lottery")
+
+        return self._persist(
+            lottery,
+            self.provider.by_contest(lottery, contest),
+        )
 
     def history(self, lottery, limit=None):
         if lottery not in LOTTERIES:

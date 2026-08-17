@@ -67,3 +67,15 @@ pytest -q
 5. CI/CD.
 6. Cloud.
 7. Kubernetes somente se houver necessidade operacional.
+
+## Backfill histórico
+
+Carrega concursos históricos da CAIXA de forma idempotente:
+
+```bash
+python -m app.cli backfill --lottery megasena --start 1 --end 10
+python -m app.cli backfill --lottery all --start 1
+```
+
+Concursos já existentes no banco são ignorados. O intervalo sem `--end`
+usa o concurso mais recente informado pela CAIXA para cada modalidade.
