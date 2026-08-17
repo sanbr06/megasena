@@ -36,6 +36,9 @@ python run.py
 
 API: `/health`, `/api/results/<lottery>`, `/api/results/update/<lottery>`, `/api/generate/<lottery>`, `/api/stats/<lottery>`, `/api/train/<lottery>`.
 
+A interface web mínima em `/` permite executar o planner de orçamento v1 no
+navegador. O token informado fica somente no formulário e não é armazenado.
+
 Use `Authorization: Bearer <API_TOKEN>` quando `API_TOKEN` estiver configurado.
 
 ## Docker

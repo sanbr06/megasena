@@ -1,9 +1,14 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, render_template
 
 from app.core.security import require_token
 from app.providers.caixa import ProviderError
 
 api = Blueprint("api", __name__)
+
+
+@api.get("/")
+def index():
+    return render_template("index.html")
 
 
 def services():
