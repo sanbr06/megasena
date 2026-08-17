@@ -83,6 +83,11 @@ e consultadas por identificador em `GET /api/v1/portfolios/<id>`. O registro gua
 modalidade, concurso, jogos, estratégia/versionamento/parâmetros, seed e snapshot
 de custo verificado. Carteiras de usuário ficam em tabela separada dos resultados
 oficiais; salvar uma carteira não registra uma aposta nos canais da CAIXA.
+`POST /api/v1/portfolios/<id>/check` confere uma carteira contra o resultado
+oficial já armazenado para o mesmo concurso. Enquanto ele não existe localmente,
+o status fica `awaiting_result`; após a conferência, fica `checked` e a resposta
+traz acertos, faixa numérica e eventos prontos para notificação. No Dia de Sorte,
+o Mês de Sorte é conferido separadamente. Valores de rateio não são inferidos.
 
 ## Docker
 

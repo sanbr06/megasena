@@ -23,6 +23,7 @@ from app.math_core.simple_budget import (
 )
 from app.math_core.walk_forward import walk_forward_frequency_backtest
 from app.services.historical_explorer import explore_history
+from app.services.portfolio_matching import match_portfolio
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 
@@ -682,3 +683,43 @@ def get_portfolio(portfolio_id):
             },
         }), 404
     return jsonify({"api_version": "v1", "data": portfolio})
+
+
+@api_v1.post("/portfolios/<int:portfolio_id>/check")
+@require_token
+def check_portfolio(portfolio_id):
+    portfolio_repository = current_app.extensions["portfolio_repository"]
+    portfolio = portfolio_repository.get(portfolio_id)
+    if portfolio is None:
+        return jsonify({
+            "api_version": "v1",
+            "error": {
+                "code": "portfolio_not_found",
+                "message": "Saved portfolio was not found.",
+                "details": [{"field": "portfolio_id", "value": portfolio_id}],
+            },
+        }), 404
+
+    result_repository = current_app.extensions["result_repository"]
+    official_result = result_repository.get_result(
+        portfolio["lottery"], portfolio["contest"]
+    )
+    if official_result is None:
+        portfolio = portfolio_repository.update_status(portfolio_id, "awaiting_result")
+        return jsonify({
+            "api_version": "v1",
+            "data": {
+                "portfolio": portfolio,
+                "check": None,
+                "message": "Official result is not available in local storage yet.",
+            },
+        })
+
+    checked_portfolio = portfolio_repository.update_status(portfolio_id, "checked")
+    return jsonify({
+        "api_version": "v1",
+        "data": {
+            "portfolio": checked_portfolio,
+            "check": match_portfolio(checked_portfolio, official_result),
+        },
+    })

@@ -94,3 +94,59 @@ def test_saved_portfolio_malformed_collections_return_validation_error(client):
     assert response.status_code == 400
     details = response.json["error"]["details"]
     assert {"field": "lottery", "code": "unsupported_lottery"} in details
+
+
+def test_saved_portfolio_check_waits_for_official_result(client):
+    created = client.post("/api/v1/portfolios", json=_portfolio(), headers=AUTH)
+
+    response = client.post(
+        f"/api/v1/portfolios/{created.json['data']['id']}/check",
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    assert response.json["data"]["portfolio"]["status"] == "awaiting_result"
+    assert response.json["data"]["check"] is None
+
+
+def test_saved_portfolio_check_matches_numbers_and_lucky_month(client, app):
+    payload = _portfolio(games=[
+        {
+            "numbers": [1, 2, 3, 4, 5, 6, 7],
+            "extra_selection": {"lucky_month": "marco"},
+        },
+        {
+            "numbers": [1, 2, 3, 8, 9, 10, 11],
+            "extra_selection": {"lucky_month": "abril"},
+        },
+    ], cost_snapshot={
+        "pricing_version": "caixa-2026-08-17",
+        "simple_game_cost_cents": 250,
+        "total_cost_cents": 500,
+    })
+    created = client.post("/api/v1/portfolios", json=payload, headers=AUTH)
+    app.extensions["result_repository"].save_result(
+        "diadesorte", 1100, "17/08/2026", [1, 2, 3, 4, 5, 6, 7],
+        "caixa-loterias", metadata={"mes_sorte": "Março"},
+    )
+
+    response = client.post(
+        f"/api/v1/portfolios/{created.json['data']['id']}/check",
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    data = response.json["data"]
+    assert data["portfolio"]["status"] == "checked"
+    assert data["check"]["games"] == [
+        {"game_number": 1, "number_hits": 7, "number_prize_tier": "7_acertos",
+         "lucky_month_match": True},
+        {"game_number": 2, "number_hits": 3, "number_prize_tier": None,
+         "lucky_month_match": False},
+    ]
+    assert data["check"]["events"] == [{
+        "type": "portfolio_game_match", "game_number": 1, "number_hits": 7,
+        "number_prize_tier": "7_acertos", "lucky_month_match": True,
+        "message": "Jogo 01: 7 acertos",
+    }]
+    assert data["check"]["payouts"] is None

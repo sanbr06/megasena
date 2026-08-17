@@ -84,3 +84,12 @@ class PortfolioRepository:
             "status": row["status"],
             "created_at": row["created_at"],
         }
+
+    def update_status(self, portfolio_id, status):
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE saved_portfolios SET status=? WHERE id=?",
+                (status, portfolio_id),
+            )
+            conn.commit()
+        return self.get(portfolio_id)
