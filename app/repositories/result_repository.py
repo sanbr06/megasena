@@ -135,6 +135,24 @@ class ResultRepository:
 
         return int(row["total"])
 
+    def get_result(self, lottery, contest):
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM results WHERE lottery=? AND contest=?",
+                (lottery, contest),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "lottery": row["lottery"],
+            "contest": row["contest"],
+            "draw_date": row["draw_date"],
+            "numbers": json.loads(row["numbers"]),
+            "source": row["source"],
+            "metadata": json.loads(row["metadata"]),
+            "created_at": row["created_at"],
+        }
+
     def is_ready(self):
         try:
             with self._connect() as conn:
