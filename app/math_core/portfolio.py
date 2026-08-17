@@ -60,6 +60,7 @@ def generate_sum_constrained_portfolio(
     maximum_sum: int,
     minimum_odd_count: int = 0,
     maximum_odd_count: int | None = None,
+    maximum_pairwise_overlap: int | None = None,
     seed: int | None = None,
 ):
     """Sample unique games uniformly from combinations satisfying the constraints."""
@@ -72,6 +73,10 @@ def generate_sum_constrained_portfolio(
         maximum_odd_count = config.quantity
     if minimum_odd_count > maximum_odd_count:
         raise ValueError("odd_count_range_is_reversed")
+    if maximum_pairwise_overlap is not None:
+        maximum_pairwise_overlap = int(maximum_pairwise_overlap)
+        if not 0 <= maximum_pairwise_overlap < config.quantity:
+            raise ValueError("invalid_maximum_pairwise_overlap")
 
     @lru_cache(maxsize=None)
     def completion_count(
@@ -113,7 +118,12 @@ def generate_sum_constrained_portfolio(
 
     rng = random.Random(seed)
     games = set()
+    attempts = 0
+    max_attempts = min(100_000, max(10_000, game_count * 100))
     while len(games) < game_count:
+        attempts += 1
+        if attempts > max_attempts:
+            raise ValueError("overlap_constraint_unsatisfied")
         game = []
         next_number = config.minimum
         remaining_min = minimum_sum
@@ -147,7 +157,16 @@ def generate_sum_constrained_portfolio(
                     remaining_odd_max -= number % 2
                     break
                 ticket -= weight
-        games.add(tuple(game))
+        candidate = tuple(game)
+        if (
+            maximum_pairwise_overlap is not None
+            and any(
+                len(set(candidate).intersection(existing)) > maximum_pairwise_overlap
+                for existing in games
+            )
+        ):
+            continue
+        games.add(candidate)
 
     return list(games)
 

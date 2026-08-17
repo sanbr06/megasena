@@ -353,6 +353,7 @@ def simple_lottery_budget_plan(lottery):
                 "budget_cents", "seed", "contest_number",
                 "allowed_sum_min", "allowed_sum_max",
                 "allowed_odd_min", "allowed_odd_max",
+                "allowed_max_overlap",
             }
         )
     ]
@@ -404,6 +405,20 @@ def simple_lottery_budget_plan(lottery):
         and odd_fields["allowed_odd_min"] > odd_fields["allowed_odd_max"]
     ):
         details.append({"field": "allowed_odd_min", "code": "range_is_reversed"})
+    overlap_fields = {}
+    if "allowed_max_overlap" in payload:
+        overlap_fields["allowed_max_overlap"], error = _integer_field(
+            payload,
+            "allowed_max_overlap",
+            minimum=0,
+            maximum=(
+                LOTTERIES[lottery].quantity - 1
+                if lottery in LOTTERIES
+                else None
+            ),
+        )
+        if error:
+            details.append(error)
     if details:
         return _validation_error(details)
 
@@ -414,6 +429,7 @@ def simple_lottery_budget_plan(lottery):
             seed=seed,
             **sum_fields,
             **odd_fields,
+            **overlap_fields,
         )
     except ValueError as exc:
         if str(exc) == "unknown_lottery":
@@ -440,6 +456,11 @@ def simple_lottery_budget_plan(lottery):
             return _validation_error([{
                 "field": "allowed_sum_min",
                 "code": "range_is_reversed",
+            }])
+        if str(exc) == "overlap_constraint_unsatisfied":
+            return _validation_error([{
+                "field": "allowed_max_overlap",
+                "code": "constraint_could_not_fill_portfolio",
             }])
         raise
 

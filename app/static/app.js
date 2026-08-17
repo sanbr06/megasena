@@ -222,12 +222,16 @@ form.addEventListener("submit", async (event) => {
   const allowedSumMax = document.querySelector("#allowed-sum-max").value;
   const allowedOddMin = document.querySelector("#allowed-odd-min").value;
   const allowedOddMax = document.querySelector("#allowed-odd-max").value;
+  const allowedMaxOverlap = document.querySelector("#allowed-max-overlap").value;
   if (allowedSumMin !== "") requestBody.allowed_sum_min = Number(allowedSumMin);
   if (allowedSumMax !== "") requestBody.allowed_sum_max = Number(allowedSumMax);
   if (allowedOddMin !== "") requestBody.allowed_odd_min = Number(allowedOddMin);
   if (allowedOddMax !== "") requestBody.allowed_odd_max = Number(allowedOddMax);
+  if (allowedMaxOverlap !== "") {
+    requestBody.allowed_max_overlap = Number(allowedMaxOverlap);
+  }
   const hasGenerationConstraint = [
-    allowedSumMin, allowedSumMax, allowedOddMin, allowedOddMax,
+    allowedSumMin, allowedSumMax, allowedOddMin, allowedOddMax, allowedMaxOverlap,
   ].some((value) => value !== "");
 
   try {
