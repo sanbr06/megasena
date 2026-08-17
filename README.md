@@ -55,6 +55,10 @@ combinações concretas. No Dia de Sorte, `lucky_month` aparece em
 `extra_selection`, separado das sete dezenas. A geração é limitada a 1.000
 jogos por requisição para manter o endpoint local previsível.
 
+O planner comparativo da Mega-Sena também devolve combinações concretas para
+até 1.000 jogos. Acima de 20 jogos elas são uniformes e reproduzíveis pelo seed,
+mas não recebem o certificado de Quadra+ nem perfis de risco que dependem dele.
+
 ## Docker
 
 ```bash

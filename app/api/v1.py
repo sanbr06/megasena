@@ -2,7 +2,11 @@ from flask import Blueprint, current_app, jsonify, request
 
 from app.core.security import require_token
 from app.lotteries.catalog import lottery_product_catalog_as_dict
-from app.math_core.budget import budget_result_as_dict, plan_megasena_budget
+from app.math_core.budget import (
+    MEGASENA_SIMPLE_GAME_COST_CENTS,
+    budget_result_as_dict,
+    plan_megasena_budget,
+)
 from app.math_core.prize_multiplicity import PayoutScenario
 from app.math_core.simple_budget import (
     MAX_GENERATED_GAMES,
@@ -171,6 +175,16 @@ def megasena_budget_plan():
 
     if details:
         return _validation_error(details)
+
+    if (
+        budget_cents // MEGASENA_SIMPLE_GAME_COST_CENTS
+        > MAX_GENERATED_GAMES
+    ):
+        return _validation_error([{
+            "field": "budget_cents",
+            "code": "generation_limit_exceeded",
+            "maximum_generated_games": MAX_GENERATED_GAMES,
+        }])
 
     result = plan_megasena_budget(
         budget_cents,

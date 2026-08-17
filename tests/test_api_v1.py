@@ -254,3 +254,33 @@ def test_simple_budget_plan_returns_structured_domain_errors(client):
         "code": "generation_limit_exceeded",
         "maximum_generated_games": 1_000,
     }]
+
+
+def test_megasena_budget_plan_returns_concrete_uncertified_portfolio(client):
+    response = client.post(
+        "/api/v1/megasena/budget-plan",
+        json={"budget_cents": 12_600, "seed": 17},
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    plan = response.json["data"]["simple_plan"]
+    assert plan["games"] == 21
+    assert len(plan["generated_games"]) == 21
+    assert plan["certified_quadra_plus_probability"] is None
+    assert plan["prize_risk"] is None
+
+
+def test_megasena_budget_plan_rejects_more_than_generation_limit(client):
+    response = client.post(
+        "/api/v1/megasena/budget-plan",
+        json={"budget_cents": 600_600},
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["details"] == [{
+        "field": "budget_cents",
+        "code": "generation_limit_exceeded",
+        "maximum_generated_games": 1_000,
+    }]

@@ -173,6 +173,18 @@ def test_uncertified_simple_plan_does_not_claim_exact_risk_profile():
     assert result.simple_plan.prize_risk is None
 
 
+def test_uncertified_simple_plan_still_generates_reproducible_games():
+    first = plan_megasena_budget(12_600, seed=17)
+    second = plan_megasena_budget(12_600, seed=17)
+
+    assert first.simple_plan.generated_games == second.simple_plan.generated_games
+    assert len(first.simple_plan.generated_games) == 21
+    assert len(set(first.simple_plan.generated_games)) == 21
+    assert all(len(game) == 6 for game in first.simple_plan.generated_games)
+    assert first.simple_plan.certified_quadra_plus_probability is None
+    assert first.simple_plan.prize_risk is None
+
+
 def test_budget_planner_integrates_explicit_payout_risk():
     scenario = PayoutScenario(
         sena_cents=500_000_000,
