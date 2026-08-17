@@ -202,3 +202,34 @@ python -m app.math_core.pairwise_cli   --lottery megasena   --games 20   --thres
 
 O Monte Carlo continua sendo usado como validação independente; a função
 objetivo do otimizador é combinatória e exata.
+
+## Provably Optimal Mega-Sena Packing
+
+O experimento exato mostrou que carteiras de 20 jogos podem atingir o limite
+superior global de probabilidade de `Quadra+`.
+
+A condição pode ser expressa de forma mais simples: dois jogos de 6 dezenas
+só podem fazer `4+` simultaneamente no mesmo sorteio se compartilharem pelo
+menos duas dezenas.
+
+Logo, se cada par de jogos da carteira compartilhar no máximo uma dezena,
+os eventos de `Quadra+` são disjuntos e:
+
+`P(pelo menos uma Quadra+) = quantidade_de_jogos * P(Quadra+ de um jogo)`
+
+Esse valor é o limite superior universal da união das probabilidades.
+Portanto a carteira vem acompanhada de um certificado de ótimo global, sem
+Monte Carlo e sem solver.
+
+O gerador implementa isso como um problema de packing de pares: cada jogo
+usa 15 pares de dezenas e nenhum par pode ser reutilizado em outro jogo.
+
+Exemplo:
+
+```bash
+python -m app.math_core.packing_cli --games 20 --seed 42
+```
+
+O certificado vale para a probabilidade de pelo menos uma `Quadra+`. Ele
+não altera a probabilidade da Sena para a mesma quantidade de jogos simples
+únicos.
