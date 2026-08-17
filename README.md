@@ -233,3 +233,40 @@ python -m app.math_core.packing_cli --games 20 --seed 42
 O certificado vale para a probabilidade de pelo menos uma `Quadra+`. Ele
 não altera a probabilidade da Sena para a mesma quantidade de jogos simples
 únicos.
+
+## Budget Portfolio Planner
+
+O núcleo matemático agora possui uma camada de orçamento para Mega-Sena.
+
+A versão de preços `caixa-2026-08-17` usa a tabela oficial da CAIXA:
+aposta simples de 6 dezenas por R$ 6,00 e apostas de 6 a 20 dezenas.
+O custo de uma aposta com `m` dezenas é:
+
+`C(m, 6) * R$ 6,00`
+
+O planner separa duas dimensões que costumam ser confundidas:
+
+- **Sena:** comprar a mesma quantidade de combinações simples produz a mesma
+  probabilidade de Sena, independentemente de elas estarem agrupadas em uma
+  aposta com mais dezenas ou em jogos simples distintos.
+- **Pelo menos uma Quadra+:** agrupar combinações em uma aposta maior cria
+  forte sobreposição entre os jogos componentes. Jogos simples bem
+  distribuídos podem cobrir mais resultados distintos de `4+`.
+
+Para até 20 jogos simples, o planner usa o gerador de pair-packing e retorna
+um certificado de ótimo global para a probabilidade de pelo menos uma
+Quadra+.
+
+Exemplo:
+
+```bash
+python -m app.math_core.budget_cli --budget 120
+```
+
+A saída inclui orçamento usado, saldo não utilizado, quantidade de jogos,
+probabilidade de Sena, probabilidade certificada de Quadra+ e perfis das
+apostas únicas com mais dezenas que cabem no mesmo orçamento.
+
+Esta versão ainda não compara multiplicidade de prêmios, valor esperado,
+rateios reais ou retorno financeiro. Esses itens pertencem à próxima camada
+do Portfolio Planner.
