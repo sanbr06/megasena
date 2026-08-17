@@ -120,3 +120,31 @@ memória e validada nos testes contra probabilidades combinatórias exatas.
 
 O resultado é uma estimativa de comportamento da carteira sob sorteios
 aleatórios, não uma previsão de resultados futuros.
+
+## Strategy Comparator
+
+O comparador coloca estratégias diferentes sob as mesmas condições de
+avaliação.
+
+A primeira estratégia experimental é `low_redundancy`: uma heurística
+greedy que procura aumentar cobertura de subconjuntos e reduzir
+sobreposição entre jogos.
+
+Exemplo:
+
+```bash
+python -m app.math_core.compare_cli   --lottery megasena   --games 20   --trials 100000   --threshold 4   --seed 42
+```
+
+O relatório compara:
+
+- cobertura combinatória;
+- sobreposição média e máxima;
+- probabilidade exata do prêmio máximo;
+- distribuição Monte Carlo;
+- probabilidade simulada de atingir um limiar de acertos.
+
+Com a mesma quantidade de jogos simples únicos, a probabilidade matemática
+de Sena permanece igual. O objetivo da estratégia de baixa redundância é
+melhorar a estrutura da carteira e a cobertura de faixas inferiores, não
+prever o sorteio.

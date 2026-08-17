@@ -18,4 +18,15 @@ __all__ = [
     "ConfidenceInterval",
     "SimulationResult",
     "simulate_portfolio",
+    "StrategyComparison",
+    "compare_strategies",
+    "generate_low_redundancy_portfolio",
 ]
+
+from app.math_core.comparison import (
+    StrategyComparison,
+    compare_strategies,
+)
+from app.math_core.strategies import (
+    generate_low_redundancy_portfolio,
+)
