@@ -16,7 +16,7 @@ class Settings:
     request_timeout: int = int(os.getenv("REQUEST_TIMEOUT", "15"))
     lottery_api_base_url: str = os.getenv(
         "LOTTERY_API_BASE_URL",
-        "https://loteriascaixa-api.herokuapp.com/api",
+        "https://servicebus2.caixa.gov.br/portaldeloterias/api",
     )
 
 

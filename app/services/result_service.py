@@ -18,12 +18,18 @@ class ResultService:
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError("invalid_contest") from exc
 
+        metadata = {}
+
+        if data.get("mesSorte"):
+            metadata["mes_sorte"] = data["mesSorte"]
+
         self.repository.save_result(
             lottery,
             contest,
             data.get("data"),
             numbers,
             self.provider.source_name,
+            metadata=metadata,
         )
         return data
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, jsonify
 
 from app.core.security import require_token
-from app.providers.lottery_api import ProviderError
+from app.providers.caixa import ProviderError
 
 api = Blueprint("api", __name__)
 
@@ -41,6 +41,7 @@ def update_results(lottery):
             "date": data.get("data"),
             "numbers": data.get("dezenas"),
             "next_contest": data.get("proximoConcurso"),
+            "mes_sorte": data.get("mesSorte"),
         })
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
