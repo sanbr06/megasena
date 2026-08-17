@@ -260,6 +260,26 @@ def test_simple_budget_plan_applies_reproducible_sum_constraint(client):
     assert "não prevê resultados" in data["constraint_disclaimer"]
 
 
+def test_simple_budget_plan_combines_sum_and_odd_count_constraints(client):
+    body = {
+        "budget_cents": 1_800,
+        "seed": 73,
+        "allowed_sum_min": 100,
+        "allowed_sum_max": 160,
+        "allowed_odd_min": 2,
+        "allowed_odd_max": 2,
+    }
+
+    response = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan", json=body, headers=AUTH
+    )
+
+    assert response.status_code == 200
+    games = response.json["data"]["generated_games"]
+    assert all(sum(number % 2 for number in game["numbers"]) == 2 for game in games)
+    assert response.json["data"]["generation_constraints"]["allowed_odd_min"] == 2
+
+
 @pytest.mark.parametrize(
     ("body", "field", "code"),
     [
@@ -267,6 +287,10 @@ def test_simple_budget_plan_applies_reproducible_sum_constraint(client):
          "allowed_sum_min", "range_is_reversed"),
         ({"budget_cents": 1_200, "allowed_sum_min": 21, "allowed_sum_max": 21},
          "budget_cents", "exceeds_constrained_combination_space"),
+        ({"budget_cents": 600, "allowed_odd_min": 7},
+         "allowed_odd_min", "must_be_at_most"),
+        ({"budget_cents": 600, "allowed_odd_min": 4, "allowed_odd_max": 3},
+         "allowed_odd_min", "range_is_reversed"),
     ],
 )
 def test_simple_budget_plan_validates_sum_constraint(client, body, field, code):
@@ -277,7 +301,10 @@ def test_simple_budget_plan_validates_sum_constraint(client, body, field, code):
     )
 
     assert response.status_code == 400
-    assert {"field": field, "code": code} in response.json["error"]["details"]
+    assert any(
+        detail["field"] == field and detail["code"] == code
+        for detail in response.json["error"]["details"]
+    )
 
 
 def test_simple_budget_plan_returns_structured_domain_errors(client):

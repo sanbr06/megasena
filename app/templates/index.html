@@ -58,7 +58,7 @@
         </small>
 
         <fieldset>
-          <legend>Restrição experimental de soma (opcional)</legend>
+          <legend>Restrições experimentais de composição (opcionais)</legend>
           <div class="filter-grid">
             <div>
               <label for="allowed-sum-min">Soma mínima</label>
@@ -70,9 +70,20 @@
             </div>
           </div>
           <small>
-            Filtrar a soma apenas define a composição da carteira. Não prevê resultados
-            nem aumenta a chance futura; avalie estratégias somente contra o baseline uniforme.
+            Filtrar soma ou quantidade de ímpares apenas define a composição da carteira.
+            Não prevê resultados nem aumenta a chance futura; avalie estratégias somente
+            contra o baseline uniforme.
           </small>
+          <div class="filter-grid">
+            <div>
+              <label for="allowed-odd-min">Mínimo de ímpares</label>
+              <input id="allowed-odd-min" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label for="allowed-odd-max">Máximo de ímpares</label>
+              <input id="allowed-odd-max" type="number" min="0" step="1">
+            </div>
+          </div>
         </fieldset>
 
         <label for="token">Token da API</label>

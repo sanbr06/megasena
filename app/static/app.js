@@ -220,9 +220,15 @@ form.addEventListener("submit", async (event) => {
   }
   const allowedSumMin = document.querySelector("#allowed-sum-min").value;
   const allowedSumMax = document.querySelector("#allowed-sum-max").value;
+  const allowedOddMin = document.querySelector("#allowed-odd-min").value;
+  const allowedOddMax = document.querySelector("#allowed-odd-max").value;
   if (allowedSumMin !== "") requestBody.allowed_sum_min = Number(allowedSumMin);
   if (allowedSumMax !== "") requestBody.allowed_sum_max = Number(allowedSumMax);
-  const hasGenerationConstraint = allowedSumMin !== "" || allowedSumMax !== "";
+  if (allowedOddMin !== "") requestBody.allowed_odd_min = Number(allowedOddMin);
+  if (allowedOddMax !== "") requestBody.allowed_odd_max = Number(allowedOddMax);
+  const hasGenerationConstraint = [
+    allowedSumMin, allowedSumMax, allowedOddMin, allowedOddMax,
+  ].some((value) => value !== "");
 
   try {
     const endpoint = lottery === "megasena" && !hasGenerationConstraint

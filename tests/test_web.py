@@ -12,6 +12,8 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b'id="contest-number"' in response.data
     assert b'id="allowed-sum-min"' in response.data
     assert b'id="allowed-sum-max"' in response.data
+    assert b'id="allowed-odd-min"' in response.data
+    assert b'id="allowed-odd-max"' in response.data
     assert "a chance futura".encode() in response.data
     assert b'id="generated-games"' in response.data
     assert b'id="portfolio-actions"' in response.data

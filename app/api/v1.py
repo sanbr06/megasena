@@ -352,6 +352,7 @@ def simple_lottery_budget_plan(lottery):
             set(payload) - {
                 "budget_cents", "seed", "contest_number",
                 "allowed_sum_min", "allowed_sum_max",
+                "allowed_odd_min", "allowed_odd_max",
             }
         )
     ]
@@ -388,6 +389,21 @@ def simple_lottery_budget_plan(lottery):
         and sum_fields["allowed_sum_min"] > sum_fields["allowed_sum_max"]
     ):
         details.append({"field": "allowed_sum_min", "code": "range_is_reversed"})
+    odd_fields = {}
+    for field in ("allowed_odd_min", "allowed_odd_max"):
+        if field in payload:
+            odd_fields[field], error = _integer_field(
+                payload, field, minimum=0, maximum=LOTTERIES.get(lottery).quantity
+                if lottery in LOTTERIES else None,
+            )
+            if error:
+                details.append(error)
+    if (
+        "allowed_odd_min" in odd_fields
+        and "allowed_odd_max" in odd_fields
+        and odd_fields["allowed_odd_min"] > odd_fields["allowed_odd_max"]
+    ):
+        details.append({"field": "allowed_odd_min", "code": "range_is_reversed"})
     if details:
         return _validation_error(details)
 
@@ -397,6 +413,7 @@ def simple_lottery_budget_plan(lottery):
             budget_cents,
             seed=seed,
             **sum_fields,
+            **odd_fields,
         )
     except ValueError as exc:
         if str(exc) == "unknown_lottery":
