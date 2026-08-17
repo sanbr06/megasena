@@ -349,7 +349,10 @@ def simple_lottery_budget_plan(lottery):
     details = [
         {"field": field, "code": "unknown_field"}
         for field in sorted(
-            set(payload) - {"budget_cents", "seed", "contest_number"}
+            set(payload) - {
+                "budget_cents", "seed", "contest_number",
+                "allowed_sum_min", "allowed_sum_max",
+            }
         )
     ]
     if "budget_cents" not in payload:
@@ -373,6 +376,18 @@ def simple_lottery_budget_plan(lottery):
         )
         if error:
             details.append(error)
+    sum_fields = {}
+    for field in ("allowed_sum_min", "allowed_sum_max"):
+        if field in payload:
+            sum_fields[field], error = _integer_field(payload, field, minimum=0)
+            if error:
+                details.append(error)
+    if (
+        "allowed_sum_min" in sum_fields
+        and "allowed_sum_max" in sum_fields
+        and sum_fields["allowed_sum_min"] > sum_fields["allowed_sum_max"]
+    ):
+        details.append({"field": "allowed_sum_min", "code": "range_is_reversed"})
     if details:
         return _validation_error(details)
 
@@ -381,6 +396,7 @@ def simple_lottery_budget_plan(lottery):
             lottery,
             budget_cents,
             seed=seed,
+            **sum_fields,
         )
     except ValueError as exc:
         if str(exc) == "unknown_lottery":
@@ -397,6 +413,16 @@ def simple_lottery_budget_plan(lottery):
                 "field": "budget_cents",
                 "code": "generation_limit_exceeded",
                 "maximum_generated_games": MAX_GENERATED_GAMES,
+            }])
+        if str(exc) == "game_count_exceeds_constrained_space":
+            return _validation_error([{
+                "field": "budget_cents",
+                "code": "exceeds_constrained_combination_space",
+            }])
+        if str(exc) == "sum_range_is_reversed":
+            return _validation_error([{
+                "field": "allowed_sum_min",
+                "code": "range_is_reversed",
             }])
         raise
 

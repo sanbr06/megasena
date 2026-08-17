@@ -234,6 +234,52 @@ def test_simple_budget_plan_preserves_contest_context(client):
     }
 
 
+def test_simple_budget_plan_applies_reproducible_sum_constraint(client):
+    url = "/api/v1/lotteries/megasena/simple-budget-plan"
+    body = {
+        "budget_cents": 1_800,
+        "seed": 73,
+        "allowed_sum_min": 100,
+        "allowed_sum_max": 110,
+    }
+
+    first = client.post(url, json=body, headers=AUTH)
+    second = client.post(url, json=body, headers=AUTH)
+
+    assert first.status_code == 200
+    assert first.json == second.json
+    data = first.json["data"]
+    assert data["generation_constraints"] == {
+        "allowed_sum_min": 100,
+        "allowed_sum_max": 110,
+    }
+    assert all(
+        100 <= sum(game["numbers"]) <= 110
+        for game in data["generated_games"]
+    )
+    assert "não prevê resultados" in data["constraint_disclaimer"]
+
+
+@pytest.mark.parametrize(
+    ("body", "field", "code"),
+    [
+        ({"budget_cents": 600, "allowed_sum_min": 20, "allowed_sum_max": 10},
+         "allowed_sum_min", "range_is_reversed"),
+        ({"budget_cents": 1_200, "allowed_sum_min": 21, "allowed_sum_max": 21},
+         "budget_cents", "exceeds_constrained_combination_space"),
+    ],
+)
+def test_simple_budget_plan_validates_sum_constraint(client, body, field, code):
+    response = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan",
+        json=body,
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+    assert {"field": field, "code": code} in response.json["error"]["details"]
+
+
 def test_simple_budget_plan_returns_structured_domain_errors(client):
     unknown = client.post(
         "/api/v1/lotteries/inexistente/simple-budget-plan",

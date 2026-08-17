@@ -218,9 +218,14 @@ form.addEventListener("submit", async (event) => {
   if (contestText !== "") {
     requestBody.contest_number = Number(contestText);
   }
+  const allowedSumMin = document.querySelector("#allowed-sum-min").value;
+  const allowedSumMax = document.querySelector("#allowed-sum-max").value;
+  if (allowedSumMin !== "") requestBody.allowed_sum_min = Number(allowedSumMin);
+  if (allowedSumMax !== "") requestBody.allowed_sum_max = Number(allowedSumMax);
+  const hasGenerationConstraint = allowedSumMin !== "" || allowedSumMax !== "";
 
   try {
-    const endpoint = lottery === "megasena"
+    const endpoint = lottery === "megasena" && !hasGenerationConstraint
       ? "/api/v1/megasena/budget-plan"
       : `/api/v1/lotteries/${lottery}/simple-budget-plan`;
     const response = await fetch(endpoint, {
@@ -236,7 +241,7 @@ form.addEventListener("submit", async (event) => {
       throw new Error(payload.error?.message || payload.error || "Falha ao calcular o plano.");
     }
 
-    const isMegaSena = lottery === "megasena";
+    const isMegaSena = lottery === "megasena" && !hasGenerationConstraint;
     const plan = isMegaSena ? payload.data.simple_plan : payload.data;
     const context = payload.data.generation_context;
     document.querySelector("#portfolio-context").textContent = context.contest_number === null
@@ -331,6 +336,9 @@ form.addEventListener("submit", async (event) => {
     } else {
       explanation.textContent = "O orçamento excede o limite de geração certificada desta versão. As métricas sem certificado não são apresentadas como se fossem uma carteira concreta.";
     }
+    const constraintDisclaimer = document.querySelector("#constraint-disclaimer");
+    constraintDisclaimer.hidden = !plan.constraint_disclaimer;
+    constraintDisclaimer.textContent = plan.constraint_disclaimer || "";
     status.textContent = "Plano calculado com sucesso.";
     results.hidden = false;
     emitBetaFunnelEvent("portfolio_generated", lottery);

@@ -1,5 +1,6 @@
 import random
 from dataclasses import dataclass
+from functools import lru_cache
 from itertools import combinations
 from math import comb
 
@@ -47,6 +48,80 @@ def generate_random_portfolio(
     while len(games) < game_count:
         game = tuple(sorted(rng.sample(population, config.quantity)))
         games.add(game)
+
+    return list(games)
+
+
+def generate_sum_constrained_portfolio(
+    config: LotteryConfig,
+    game_count: int,
+    *,
+    minimum_sum: int,
+    maximum_sum: int,
+    seed: int | None = None,
+):
+    """Sample unique games uniformly from combinations inside a sum interval."""
+    game_count = int(game_count)
+    if game_count <= 0:
+        raise ValueError("game_count_must_be_positive")
+    if minimum_sum > maximum_sum:
+        raise ValueError("sum_range_is_reversed")
+
+    @lru_cache(maxsize=None)
+    def completion_count(next_number, remaining, remaining_min, remaining_max):
+        if remaining == 0:
+            return int(remaining_min <= 0 <= remaining_max)
+        last_start = config.maximum - remaining + 1
+        return sum(
+            completion_count(
+                number + 1,
+                remaining - 1,
+                remaining_min - number,
+                remaining_max - number,
+            )
+            for number in range(next_number, last_start + 1)
+        )
+
+    eligible = completion_count(
+        config.minimum,
+        config.quantity,
+        minimum_sum,
+        maximum_sum,
+    )
+    if game_count > eligible:
+        raise ValueError("game_count_exceeds_constrained_space")
+
+    rng = random.Random(seed)
+    games = set()
+    while len(games) < game_count:
+        game = []
+        next_number = config.minimum
+        remaining_min = minimum_sum
+        remaining_max = maximum_sum
+        for remaining in range(config.quantity, 0, -1):
+            choices = []
+            total_weight = 0
+            last_start = config.maximum - remaining + 1
+            for number in range(next_number, last_start + 1):
+                weight = completion_count(
+                    number + 1,
+                    remaining - 1,
+                    remaining_min - number,
+                    remaining_max - number,
+                )
+                if weight:
+                    choices.append((number, weight))
+                    total_weight += weight
+            ticket = rng.randrange(total_weight)
+            for number, weight in choices:
+                if ticket < weight:
+                    game.append(number)
+                    next_number = number + 1
+                    remaining_min -= number
+                    remaining_max -= number
+                    break
+                ticket -= weight
+        games.add(tuple(game))
 
     return list(games)
 

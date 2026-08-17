@@ -10,6 +10,9 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b'id="budget-ceiling"' in response.data
     assert b'id="budget-warning"' in response.data
     assert b'id="contest-number"' in response.data
+    assert b'id="allowed-sum-min"' in response.data
+    assert b'id="allowed-sum-max"' in response.data
+    assert "a chance futura".encode() in response.data
     assert b'id="generated-games"' in response.data
     assert b'id="portfolio-actions"' in response.data
     assert b'id="copy-games"' in response.data
@@ -57,6 +60,8 @@ def test_web_assets_are_available(client):
     assert b"payload.data.budget_cents - system.cost_cents" in script.data
     assert b"seed" in script.data
     assert b"generation_context" in script.data
+    assert b"allowed_sum_min" in script.data
+    assert b"plan.constraint_disclaimer" in script.data
     assert b"contest_number" in script.data
     assert b"portfolioText" in script.data
     assert b"portfolioCsv" in script.data

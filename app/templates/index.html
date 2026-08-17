@@ -57,6 +57,24 @@
           Apenas identifica o contexto da carteira; não influencia as combinações geradas.
         </small>
 
+        <fieldset>
+          <legend>Restrição experimental de soma (opcional)</legend>
+          <div class="filter-grid">
+            <div>
+              <label for="allowed-sum-min">Soma mínima</label>
+              <input id="allowed-sum-min" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label for="allowed-sum-max">Soma máxima</label>
+              <input id="allowed-sum-max" type="number" min="0" step="1">
+            </div>
+          </div>
+          <small>
+            Filtrar a soma apenas define a composição da carteira. Não prevê resultados
+            nem aumenta a chance futura; avalie estratégias somente contra o baseline uniforme.
+          </small>
+        </fieldset>
+
         <label for="token">Token da API</label>
         <input id="token" name="token" type="password" autocomplete="off" required
                aria-describedby="token-help">
@@ -80,6 +98,7 @@
         <div><dt>Probabilidade de prêmios múltiplos</dt><dd id="multiple-prizes-probability"></dd></div>
       </dl>
       <p id="portfolio-explanation" class="note"></p>
+      <p id="constraint-disclaimer" class="note" hidden></p>
       <h3 id="generated-games-title">Combinações geradas</h3>
       <ol id="generated-games" class="game-list" aria-label="Jogos gerados"></ol>
       <section id="portfolio-actions" aria-labelledby="portfolio-actions-title" hidden>
