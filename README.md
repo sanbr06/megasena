@@ -13,6 +13,7 @@ Aplicação Python para coleta, armazenamento, análise estatística e geração
 - Intelligence: features, pesos e geração estatística.
 - Docker: execução reproduzível.
 - GitHub Actions: testes, lint e build.
+- Decisão arquitetural: [`ADR-0001`](docs/adr/0001-mvp-v2-architecture-and-evolution.md).
 
 ## Execução
 
@@ -151,13 +152,17 @@ pytest -q
 
 ## Roadmap
 
-1. Migrar e validar o legado.
-2. Aumentar cobertura de testes.
-3. PostgreSQL.
-4. Observabilidade.
-5. CI/CD.
-6. Cloud.
-7. Kubernetes somente se houver necessidade operacional.
+O roadmap arquitetural pós-MVP V2 está documentado em
+[`ADR-0001`](docs/adr/0001-mvp-v2-architecture-and-evolution.md).
+
+Prioridades atuais:
+
+1. concluir smoke visual e adicionar E2E de navegador;
+2. decidir identidade/autorização e PostgreSQL antes de beta público;
+3. preparar runtime de produção, HTTPS, segredos e observabilidade;
+4. automatizar acompanhamento de resultados/notificações após os gates de usuário;
+5. evoluir analytics apenas com evidência de gargalo;
+6. começar cloud com uma aplicação + banco gerenciado; Kubernetes só por necessidade operacional.
 
 ## Backfill histórico
 

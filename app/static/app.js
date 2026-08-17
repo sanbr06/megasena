@@ -82,6 +82,81 @@ const formatOptionalProbability = (value) => (
     : formatProbability(value)
 );
 
+const validationFieldLabels = Object.freeze({
+  body: "Requisição",
+  budget_cents: "Orçamento",
+  seed: "Seed",
+  contest_number: "Concurso",
+  allowed_sum_min: "Soma mínima",
+  allowed_sum_max: "Soma máxima",
+  allowed_odd_min: "Mínimo de ímpares",
+  allowed_odd_max: "Máximo de ímpares",
+  allowed_repeat_min: "Mínimo repetido do concurso anterior",
+  allowed_repeat_max: "Máximo repetido do concurso anterior",
+  allowed_max_overlap: "Sobreposição máxima",
+  minimum_training_draws: "Concursos mínimos de treinamento",
+  threshold: "Limiar de acertos",
+  significance_level: "Nível de significância",
+});
+
+const validationDetailMessage = (detail) => {
+  const field = validationFieldLabels[detail.field] || detail.field || "Campo";
+  switch (detail.code) {
+    case "required":
+      return `${field} é obrigatório.`;
+    case "json_required":
+      return "A requisição precisa ser enviada como JSON.";
+    case "must_be_object":
+      return `${field} precisa ser um objeto válido.`;
+    case "must_be_integer":
+      return `${field} deve ser um número inteiro.`;
+    case "must_be_at_least":
+      return `${field} deve ser no mínimo ${detail.minimum}.`;
+    case "must_be_at_most":
+      return `${field} deve ser no máximo ${detail.maximum}.`;
+    case "range_is_reversed":
+      return `${field}: o valor mínimo não pode ser maior que o máximo.`;
+    case "required_for_repeat_constraint":
+      return "Informe o concurso para usar o filtro de repetição.";
+    case "previous_official_result_not_available":
+      return `O resultado oficial do concurso anterior (${detail.previous_contest}) não está disponível no histórico local. Atualize o histórico ou escolha um concurso cujo anterior esteja armazenado.`;
+    case "exceeds_constrained_combination_space":
+      return "Os filtros deixam menos combinações disponíveis do que a quantidade de jogos solicitada pelo orçamento.";
+    case "overlap_constraint_unsatisfied":
+      return "Não foi possível montar a quantidade de jogos solicitada respeitando a sobreposição máxima. Aumente o limite de sobreposição ou reduza o orçamento.";
+    case "generation_limit_exceeded":
+      return `A geração está limitada a ${detail.maximum_generated_games || 1000} jogos por requisição.`;
+    case "unknown_field":
+      return `Campo não reconhecido pela API: ${detail.field}.`;
+    default:
+      return `${field}: ${String(detail.code || "valor inválido").replaceAll("_", " ")}.`;
+  }
+};
+
+const apiErrorMessage = (payload, fallback) => {
+  const error = payload?.error;
+  if (error && typeof error === "object" && Array.isArray(error.details) && error.details.length) {
+    return error.details.map(validationDetailMessage).join(" ");
+  }
+  if (typeof error === "string") {
+    const authenticationMessages = {
+      token_required: "Informe o token da API.",
+      invalid_token: "Token da API inválido.",
+      auth_not_configured: "A autenticação da API não está configurada no servidor.",
+    };
+    return authenticationMessages[error] || error;
+  }
+  if (
+    error
+    && typeof error === "object"
+    && typeof error.message === "string"
+    && error.message !== "Request validation failed."
+  ) {
+    return error.message;
+  }
+  return fallback;
+};
+
 const appendComparisonRow = (body, values) => {
   const row = document.createElement("tr");
   for (const value of values) {
@@ -238,6 +313,13 @@ form.addEventListener("submit", async (event) => {
     allowedSumMin, allowedSumMax, allowedOddMin, allowedOddMax,
     allowedRepeatMin, allowedRepeatMax, allowedMaxOverlap,
   ].some((value) => value !== "");
+  const hasRepeatConstraint = [allowedRepeatMin, allowedRepeatMax]
+    .some((value) => value !== "");
+  if (hasRepeatConstraint && contestText === "") {
+    status.textContent = "Informe o concurso para usar o filtro de repetição.";
+    document.querySelector("#contest-number").focus();
+    return;
+  }
 
   try {
     const endpoint = lottery === "megasena" && !hasGenerationConstraint
@@ -253,7 +335,7 @@ form.addEventListener("submit", async (event) => {
     });
     const payload = await response.json();
     if (!response.ok) {
-      throw new Error(payload.error?.message || payload.error || "Falha ao calcular o plano.");
+      throw new Error(apiErrorMessage(payload, "Falha ao calcular o plano."));
     }
 
     const isMegaSena = lottery === "megasena" && !hasGenerationConstraint;
@@ -424,7 +506,7 @@ const checkSavedPortfolio = async (portfolioId, lottery) => {
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(
-        payload.error?.message || payload.error || "Falha ao conferir a carteira.",
+        apiErrorMessage(payload, "Falha ao conferir a carteira."),
       );
     }
     renderSavedPortfolioCheck(portfolioId, payload.data);
@@ -479,7 +561,7 @@ const loadSavedPortfolios = async () => {
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(
-        payload.error?.message || payload.error || "Falha ao carregar as carteiras.",
+        apiErrorMessage(payload, "Falha ao carregar as carteiras."),
       );
     }
     renderSavedPortfolios(payload.data);
@@ -539,7 +621,7 @@ document.querySelector("#save-portfolio").addEventListener("click", async () => 
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(
-        payload.error?.message || payload.error || "Falha ao salvar a carteira.",
+        apiErrorMessage(payload, "Falha ao salvar a carteira."),
       );
     }
     actionStatus.textContent =
@@ -591,7 +673,7 @@ historyForm.addEventListener("submit", async (event) => {
     });
     const payload = await response.json();
     if (!response.ok) {
-      throw new Error(payload.error?.message || payload.error || "Falha ao carregar o histórico.");
+      throw new Error(apiErrorMessage(payload, "Falha ao carregar o histórico."));
     }
 
     const data = payload.data;
@@ -677,7 +759,7 @@ backtestForm.addEventListener("submit", async (event) => {
     });
     const payload = await response.json();
     if (!response.ok) {
-      throw new Error(payload.error?.message || payload.error || "Falha ao executar o backtest.");
+      throw new Error(apiErrorMessage(payload, "Falha ao executar o backtest."));
     }
 
     const data = payload.data;
