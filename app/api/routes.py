@@ -1,6 +1,7 @@
 from flask import Blueprint, current_app, jsonify
 
 from app.core.security import require_token
+from app.providers.lottery_api import ProviderError
 
 api = Blueprint("api", __name__)
 
@@ -43,8 +44,9 @@ def update_results(lottery):
         })
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": "external_api_error", "detail": str(exc)}), 502
+    except ProviderError:
+        current_app.logger.exception("Lottery provider request failed")
+        return jsonify({"error": "external_api_error"}), 502
 
 
 @api.get("/api/generate/<lottery>")

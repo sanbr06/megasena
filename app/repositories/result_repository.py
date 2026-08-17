@@ -46,15 +46,23 @@ class ResultRepository:
             """, (lottery, contest, draw_date, json.dumps(numbers), source))
             conn.commit()
 
-    def list_results(self, lottery, limit=1000):
+    def list_results(self, lottery, limit=None):
+        query = """
+            SELECT lottery, contest, draw_date, numbers, source, created_at
+            FROM results
+            WHERE lottery=?
+            ORDER BY contest DESC
+        """
+        params = [lottery]
+
+        if limit is not None:
+            if limit <= 0:
+                raise ValueError("limit_must_be_positive")
+            query += " LIMIT ?"
+            params.append(limit)
+
         with self._connect() as conn:
-            rows = conn.execute("""
-                SELECT lottery, contest, draw_date, numbers, source, created_at
-                FROM results
-                WHERE lottery=?
-                ORDER BY contest DESC
-                LIMIT ?
-            """, (lottery, limit)).fetchall()
+            rows = conn.execute(query, params).fetchall()
 
         return [{
             "lottery": row["lottery"],
@@ -64,3 +72,11 @@ class ResultRepository:
             "source": row["source"],
             "created_at": row["created_at"],
         } for row in rows]
+
+    def count_results(self, lottery):
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS total FROM results WHERE lottery=?",
+                (lottery,),
+            ).fetchone()
+        return int(row["total"])

@@ -10,10 +10,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN useradd --create-home appuser &&     mkdir -p /app/data &&     chown -R appuser:appuser /app
+RUN useradd --create-home appuser && \
+    mkdir -p /app/data && \
+    chown -R appuser:appuser /app
 
 USER appuser
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["python", "run.py"]

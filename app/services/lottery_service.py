@@ -29,7 +29,6 @@ class LotteryService:
         if not any(frequency.values()):
             return sorted(random.sample(population, config.quantity))
 
-        # Peso mínimo 1 mantém todos os números elegíveis.
         weights = [1 + frequency[n] for n in population]
         selected = set()
 
@@ -47,7 +46,7 @@ class LotteryService:
 
         return {
             "lottery": lottery,
-            "draws": len(self.repository.list_results(lottery)),
+            "draws": self.repository.count_results(lottery),
             "frequency": dict(ordered),
             "top_numbers": ordered[:10],
         }
@@ -56,8 +55,9 @@ class LotteryService:
         stats = self.stats(lottery)
         return {
             "lottery": lottery,
-            "status": "trained",
+            "status": "statistics_refreshed",
             "draws_used": stats["draws"],
             "algorithm": "frequency_weighted_v1",
+            "model_type": "heuristic",
             "top_numbers": stats["top_numbers"],
         }

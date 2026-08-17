@@ -1,5 +1,5 @@
 def test_training_isolated_by_lottery(client, app):
-    repository = app.extensions["result_service"].repository
+    repository = app.extensions["result_repository"]
 
     repository.save_result(
         "megasena", 1, "01/01/2026", [1, 2, 3, 4, 5, 6], "test"
@@ -19,3 +19,5 @@ def test_training_isolated_by_lottery(client, app):
     assert lotofacil.json["lottery"] == "lotofacil"
     assert mega.json["draws_used"] == 1
     assert lotofacil.json["draws_used"] == 1
+    assert mega.json["status"] == "statistics_refreshed"
+    assert mega.json["model_type"] == "heuristic"
