@@ -148,3 +148,27 @@ Com a mesma quantidade de jogos simples únicos, a probabilidade matemática
 de Sena permanece igual. O objetivo da estratégia de baixa redundância é
 melhorar a estrutura da carteira e a cobertura de faixas inferiores, não
 prever o sorteio.
+
+## Scenario Coverage Optimizer
+
+A cobertura de subconjuntos de 4 dezenas fica quase saturada rapidamente em
+carteiras pequenas. Por isso, o próximo otimizador trabalha diretamente com
+o objetivo operacional: cobrir o maior número possível de sorteios
+simulados que resultariam em um limiar de prêmio.
+
+O algoritmo usa um problema de `maximum coverage`:
+
+1. gera um conjunto de jogos candidatos;
+2. gera cenários de treino independentes;
+3. representa a cobertura de cada jogo por bitsets;
+4. seleciona jogos de forma greedy pelo maior ganho marginal;
+5. mede o resultado em um conjunto Monte Carlo holdout separado.
+
+Exemplo:
+
+```bash
+python -m app.math_core.scenario_cli   --lottery megasena   --games 20   --candidates 1000   --training-scenarios 50000   --holdout-trials 500000   --threshold 4   --seed 42
+```
+
+O holdout é obrigatório para evitar que uma carteira pareça melhor apenas
+porque foi otimizada sobre os mesmos cenários usados na avaliação.
