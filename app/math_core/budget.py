@@ -14,9 +14,11 @@ from app.math_core.exact_packing import (
     certify_megasena_quadraplus_optimum,
     generate_megasena_quadraplus_optimal_packing,
 )
+from app.math_core.portfolio import generate_random_portfolio
 from app.math_core.prize_dependency import (
     prize_threshold_probability,
 )
+from app.math_core.simple_budget import MAX_GENERATED_GAMES
 
 MEGASENA_PRICING_VERSION = "caixa-2026-08-17"
 MEGASENA_PRICING_SOURCE = (
@@ -267,6 +269,12 @@ def plan_megasena_budget(
                 games,
                 payout_scenario,
             )
+    elif 0 < games <= MAX_GENERATED_GAMES:
+        # These games make the budget plan concrete and reproducible, but do
+        # not inherit the pair-packing certificate or its exact risk profile.
+        generated_games = sorted(
+            generate_random_portfolio(config, games, seed=seed)
+        )
 
     simple_plan = SimpleBudgetPlan(
         budget_cents=budget_cents,
