@@ -14,6 +14,45 @@ const caixaLotteryPages = {
   diadesorte: "https://loterias.caixa.gov.br/Paginas/default.aspx",
 };
 let portablePortfolio = null;
+const budgetCeilingInput = document.querySelector("#budget-ceiling");
+const budgetWarning = document.querySelector("#budget-warning");
+const budgetCeilingStorageKey = "megasena.personalBudgetCeiling";
+
+let storedBudgetCeiling = null;
+try {
+  storedBudgetCeiling = localStorage.getItem(budgetCeilingStorageKey);
+} catch (error) {
+  // The ceiling remains session-only when browser storage is unavailable.
+}
+if (storedBudgetCeiling !== null) {
+  budgetCeilingInput.value = storedBudgetCeiling;
+}
+
+const validateBudgetCeiling = () => {
+  const budget = Number(document.querySelector("#budget").value);
+  const ceilingText = budgetCeilingInput.value;
+  const ceiling = Number(ceilingText);
+  const exceeded = ceilingText !== "" && Number.isFinite(ceiling) && budget > ceiling;
+  budgetWarning.hidden = !exceeded;
+  budgetWarning.textContent = exceeded
+    ? `O valor solicitado excede seu teto pessoal de ${formatMoney(Math.round(ceiling * 100))}. Reduza o orçamento ou ajuste conscientemente o teto.`
+    : "";
+  return !exceeded;
+};
+
+budgetCeilingInput.addEventListener("change", () => {
+  try {
+    if (budgetCeilingInput.value === "") {
+      localStorage.removeItem(budgetCeilingStorageKey);
+    } else if (budgetCeilingInput.checkValidity()) {
+      localStorage.setItem(budgetCeilingStorageKey, budgetCeilingInput.value);
+    }
+  } catch (error) {
+    // Keep enforcing the entered value for this session even without persistence.
+  }
+  validateBudgetCeiling();
+});
+document.querySelector("#budget").addEventListener("input", validateBudgetCeiling);
 
 const formatMoney = (cents) => new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -150,6 +189,11 @@ const renderTrendChart = (container, draws) => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   results.hidden = true;
+  if (!validateBudgetCeiling()) {
+    status.textContent = "Plano não gerado: o orçamento está acima do teto pessoal configurado.";
+    budgetWarning.focus();
+    return;
+  }
   status.textContent = "Calculando…";
 
   const budgetText = document.querySelector("#budget").value;
