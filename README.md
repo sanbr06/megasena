@@ -78,6 +78,12 @@ uniforme reproduzível por seed. A interface mostra taxas observadas, diferença
 valor-p pareado e a conclusão explícita `SEM EVIDÊNCIA DE VANTAGEM` quando o
 critério estatístico não é atendido. Resultado histórico não é previsão.
 
+Carteiras geradas podem ser persistidas localmente com `POST /api/v1/portfolios`
+e consultadas por identificador em `GET /api/v1/portfolios/<id>`. O registro guarda
+modalidade, concurso, jogos, estratégia/versionamento/parâmetros, seed e snapshot
+de custo verificado. Carteiras de usuário ficam em tabela separada dos resultados
+oficiais; salvar uma carteira não registra uma aposta nos canais da CAIXA.
+
 ## Docker
 
 ```bash

@@ -20,6 +20,10 @@ class ResultRepository:
         conn.row_factory = sqlite3.Row
         return conn
 
+    def connection(self):
+        """Return a configured connection for repositories sharing this database."""
+        return self._connect()
+
     def initialize(self):
         with self._connect() as conn:
             conn.execute("""
