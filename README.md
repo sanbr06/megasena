@@ -372,3 +372,17 @@ contrário, o resultado declara `no_evidence_of_historical_advantage`.
 
 Esse backtest mede desempenho histórico fora da amostra. Ele não prevê sorteios
 futuros e não altera a probabilidade matemática de uma combinação individual.
+
+## Exact Certificates for Supported Lotteries
+
+O certificado de eventos de prêmio disjuntos também pode ser aplicado às
+configurações de Lotofácil, Quina e Dia de Sorte. Para uma carteira e um limiar
+de acertos informados pelo analista, o cálculo combinatório exato verifica se
+dois jogos podem premiar no mesmo sorteio. Se todas as interseções forem nulas,
+a probabilidade da carteira é a soma das probabilidades individuais e atinge o
+limite superior universal da união.
+
+Essa generalização não presume faixas de prêmio, preços ou pagamentos das
+outras loterias: o limiar é uma entrada analítica explícita. O certificado mede
+probabilidade de atingir esse limiar, não valor esperado nem probabilidade de
+qualquer faixa oficial não modelada.

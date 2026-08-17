@@ -5,6 +5,7 @@ from math import comb
 
 from app.lotteries.base import LotteryConfig
 from app.math_core.prize_dependency import (
+    pairwise_prize_intersection_probability,
     prize_threshold_probability,
 )
 
@@ -49,12 +50,12 @@ def _max_pairwise_overlap(games):
     )
 
 
-def certify_megasena_quadraplus_optimum(
+def certify_disjoint_prize_optimum(
     config: LotteryConfig,
     games,
+    *,
+    threshold: int,
 ):
-    _validate_mega_quadraplus(config)
-
     normalized = [
         tuple(config.validate_numbers(game))
         for game in games
@@ -67,16 +68,19 @@ def certify_megasena_quadraplus_optimum(
         raise ValueError("portfolio_must_contain_unique_games")
 
     max_overlap = _max_pairwise_overlap(normalized)
-
-    # For two 6-number Mega-Sena tickets to both score 4+ in
-    # the same 6-number draw, they must share at least 2 numbers.
-    # Therefore overlap <= 1 makes the 4+ winning-draw sets
-    # pairwise disjoint.
-    disjoint = max_overlap <= 1
+    threshold = int(threshold)
 
     single_probability = prize_threshold_probability(
         config,
-        threshold=4,
+        threshold=threshold,
+    )
+    disjoint = all(
+        pairwise_prize_intersection_probability(
+            config,
+            threshold,
+            len(set(left).intersection(right)),
+        ) == 0
+        for left, right in combinations(normalized, 2)
     )
     upper_bound = min(
         1.0,
@@ -88,7 +92,7 @@ def certify_megasena_quadraplus_optimum(
 
     return GlobalOptimalityCertificate(
         lottery=config.slug,
-        threshold=4,
+        threshold=threshold,
         games=len(normalized),
         max_pairwise_overlap=max_overlap,
         pairwise_prize_events_disjoint=disjoint,
@@ -97,6 +101,18 @@ def certify_megasena_quadraplus_optimum(
         achieved_probability=achieved,
         optimality_gap=gap,
         is_global_optimum=disjoint,
+    )
+
+
+def certify_megasena_quadraplus_optimum(
+    config: LotteryConfig,
+    games,
+):
+    _validate_mega_quadraplus(config)
+    return certify_disjoint_prize_optimum(
+        config,
+        games,
+        threshold=4,
     )
 
 

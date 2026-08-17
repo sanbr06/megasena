@@ -4,6 +4,7 @@ import pytest
 
 from app.lotteries import LOTTERIES
 from app.math_core.exact_packing import (
+    certify_disjoint_prize_optimum,
     certify_megasena_quadraplus_optimum,
     generate_megasena_quadraplus_optimal_packing,
 )
@@ -120,3 +121,52 @@ def test_pair_packing_elementary_bound_is_enforced():
             config,
             119,
         )
+
+
+@pytest.mark.parametrize(
+    ("lottery", "threshold", "games"),
+    [
+        ("quina", 4, [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]]),
+        ("diadesorte", 5, [
+            [1, 2, 3, 4, 5, 6, 7],
+            [8, 9, 10, 11, 12, 13, 14],
+        ]),
+        ("lotofacil", 15, [
+            list(range(1, 16)),
+            list(range(11, 26)),
+        ]),
+    ],
+)
+def test_disjoint_prize_certificate_generalizes_to_supported_lotteries(
+    lottery,
+    threshold,
+    games,
+):
+    certificate = certify_disjoint_prize_optimum(
+        LOTTERIES[lottery],
+        games,
+        threshold=threshold,
+    )
+
+    assert certificate.lottery == lottery
+    assert certificate.threshold == threshold
+    assert certificate.pairwise_prize_events_disjoint is True
+    assert certificate.is_global_optimum is True
+    assert certificate.achieved_probability == pytest.approx(
+        certificate.games * certificate.single_ticket_probability
+    )
+
+
+def test_generic_certificate_does_not_claim_optimum_for_dependent_events():
+    certificate = certify_disjoint_prize_optimum(
+        LOTTERIES["quina"],
+        [
+            [1, 2, 3, 4, 5],
+            [1, 2, 3, 6, 7],
+        ],
+        threshold=4,
+    )
+
+    assert certificate.pairwise_prize_events_disjoint is False
+    assert certificate.is_global_optimum is False
+    assert certificate.achieved_probability is None
