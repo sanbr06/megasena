@@ -1,0 +1,9 @@
+{
+  "name": "MegaSena Analytics",
+  "short_name": "MegaSena",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#123c2f",
+  "lang": "pt-BR"
+}

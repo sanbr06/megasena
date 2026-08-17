@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c2f">
+  <title>MegaSena Analytics</title>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">MegaSena Analytics</p>
+      <h1>Planeje uma carteira por orçamento</h1>
+      <p class="lead">
+        Compare cobertura e risco com combinatória exata. A escolha das dezenas não prevê
+        sorteios nem melhora a chance de Sena de uma combinação individual.
+      </p>
+    </header>
+
+    <section class="panel" aria-labelledby="planner-title">
+      <h2 id="planner-title">Orçamento</h2>
+      <form id="budget-form">
+        <label for="budget">Valor disponível (R$)</label>
+        <input id="budget" name="budget" type="number" min="0" step="0.01" value="120.00" required>
+
+        <label for="token">Token da API</label>
+        <input id="token" name="token" type="password" autocomplete="off" required
+               aria-describedby="token-help">
+        <small id="token-help">Usado somente nesta requisição; não é armazenado pelo navegador.</small>
+
+        <button type="submit">Calcular plano</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="results" class="panel" aria-labelledby="results-title" hidden>
+      <h2 id="results-title">Plano de jogos simples</h2>
+      <dl class="metrics">
+        <div><dt>Orçamento usado</dt><dd id="used-budget"></dd></div>
+        <div><dt>Jogos simples</dt><dd id="games"></dd></div>
+        <div><dt>Probabilidade de Sena</dt><dd id="jackpot-probability"></dd></div>
+        <div><dt>Probabilidade de qualquer prêmio</dt><dd id="any-prize-probability"></dd></div>
+        <div><dt>Probabilidade de prêmios múltiplos</dt><dd id="multiple-prizes-probability"></dd></div>
+      </dl>
+      <p class="note">
+        Probabilidade de prêmio, valor esperado, variância e probabilidade de Sena são
+        medidas diferentes. Valores de rateio, quando usados, são cenários — não previsões.
+        Métricas que dependem de um certificado exato são identificadas quando a carteira
+        está fora do limite certificado.
+      </p>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
