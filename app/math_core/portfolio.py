@@ -60,6 +60,9 @@ def generate_sum_constrained_portfolio(
     maximum_sum: int,
     minimum_odd_count: int = 0,
     maximum_odd_count: int | None = None,
+    minimum_repeat_count: int = 0,
+    maximum_repeat_count: int | None = None,
+    reference_numbers=None,
     maximum_pairwise_overlap: int | None = None,
     seed: int | None = None,
 ):
@@ -73,6 +76,13 @@ def generate_sum_constrained_portfolio(
         maximum_odd_count = config.quantity
     if minimum_odd_count > maximum_odd_count:
         raise ValueError("odd_count_range_is_reversed")
+    if maximum_repeat_count is None:
+        maximum_repeat_count = config.quantity
+    if minimum_repeat_count > maximum_repeat_count:
+        raise ValueError("repeat_count_range_is_reversed")
+    reference_set = frozenset(reference_numbers or ())
+    if (minimum_repeat_count > 0 or maximum_repeat_count < config.quantity) and not reference_set:
+        raise ValueError("repeat_reference_required")
     if maximum_pairwise_overlap is not None:
         maximum_pairwise_overlap = int(maximum_pairwise_overlap)
         if not 0 <= maximum_pairwise_overlap < config.quantity:
@@ -86,11 +96,14 @@ def generate_sum_constrained_portfolio(
         remaining_max,
         remaining_odd_min,
         remaining_odd_max,
+        remaining_repeat_min,
+        remaining_repeat_max,
     ):
         if remaining == 0:
             return int(
                 remaining_min <= 0 <= remaining_max
                 and remaining_odd_min <= 0 <= remaining_odd_max
+                and remaining_repeat_min <= 0 <= remaining_repeat_max
             )
         last_start = config.maximum - remaining + 1
         return sum(
@@ -101,6 +114,8 @@ def generate_sum_constrained_portfolio(
                 remaining_max - number,
                 remaining_odd_min - (number % 2),
                 remaining_odd_max - (number % 2),
+                remaining_repeat_min - int(number in reference_set),
+                remaining_repeat_max - int(number in reference_set),
             )
             for number in range(next_number, last_start + 1)
         )
@@ -112,6 +127,8 @@ def generate_sum_constrained_portfolio(
         maximum_sum,
         minimum_odd_count,
         maximum_odd_count,
+        minimum_repeat_count,
+        maximum_repeat_count,
     )
     if game_count > eligible:
         raise ValueError("game_count_exceeds_constrained_space")
@@ -130,6 +147,8 @@ def generate_sum_constrained_portfolio(
         remaining_max = maximum_sum
         remaining_odd_min = minimum_odd_count
         remaining_odd_max = maximum_odd_count
+        remaining_repeat_min = minimum_repeat_count
+        remaining_repeat_max = maximum_repeat_count
         for remaining in range(config.quantity, 0, -1):
             choices = []
             total_weight = 0
@@ -142,6 +161,8 @@ def generate_sum_constrained_portfolio(
                     remaining_max - number,
                     remaining_odd_min - (number % 2),
                     remaining_odd_max - (number % 2),
+                    remaining_repeat_min - int(number in reference_set),
+                    remaining_repeat_max - int(number in reference_set),
                 )
                 if weight:
                     choices.append((number, weight))
@@ -155,6 +176,8 @@ def generate_sum_constrained_portfolio(
                     remaining_max -= number
                     remaining_odd_min -= number % 2
                     remaining_odd_max -= number % 2
+                    remaining_repeat_min -= int(number in reference_set)
+                    remaining_repeat_max -= int(number in reference_set)
                     break
                 ticket -= weight
         candidate = tuple(game)

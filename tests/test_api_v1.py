@@ -136,6 +136,60 @@ def test_simple_budget_plan_applies_pairwise_overlap_constraint(client):
             assert len(set(left).intersection(right)) <= 2
 
 
+def test_simple_budget_plan_applies_previous_draw_repeat_constraint(client, app):
+    previous = [1, 2, 3, 4, 5, 6]
+    app.extensions["result_repository"].save_result(
+        "megasena", 99, "16/08/2026", previous, "caixa"
+    )
+    body = {
+        "budget_cents": 1_800,
+        "seed": 81,
+        "contest_number": 100,
+        "allowed_repeat_min": 2,
+        "allowed_repeat_max": 2,
+    }
+
+    first = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan",
+        json=body,
+        headers=AUTH,
+    )
+    second = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan",
+        json=body,
+        headers=AUTH,
+    )
+
+    assert first.status_code == 200
+    assert first.json == second.json
+    data = first.json["data"]
+    assert data["generation_constraints"]["allowed_repeat_min"] == 2
+    assert data["generation_constraints"]["allowed_repeat_max"] == 2
+    assert all(
+        len(set(game["numbers"]).intersection(previous)) == 2
+        for game in data["generated_games"]
+    )
+
+
+def test_repeat_constraint_requires_previous_official_result(client):
+    response = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan",
+        json={
+            "budget_cents": 600,
+            "contest_number": 100,
+            "allowed_repeat_min": 2,
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+    assert {
+        "field": "contest_number",
+        "code": "previous_official_result_not_available",
+        "previous_contest": 99,
+    } in response.json["error"]["details"]
+
+
 @pytest.mark.parametrize(
     ("body", "field", "code"),
     [
@@ -321,6 +375,16 @@ def test_simple_budget_plan_combines_sum_and_odd_count_constraints(client):
          "allowed_odd_min", "range_is_reversed"),
         ({"budget_cents": 600, "allowed_max_overlap": 6},
          "allowed_max_overlap", "must_be_at_most"),
+        ({"budget_cents": 600, "allowed_repeat_min": 7},
+         "allowed_repeat_min", "must_be_at_most"),
+        ({"budget_cents": 600, "allowed_repeat_min": 2},
+         "contest_number", "required_for_repeat_constraint"),
+        ({
+            "budget_cents": 600,
+            "contest_number": 100,
+            "allowed_repeat_min": 4,
+            "allowed_repeat_max": 3,
+        }, "allowed_repeat_min", "range_is_reversed"),
     ],
 )
 def test_simple_budget_plan_validates_generation_constraints(client, body, field, code):

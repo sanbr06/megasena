@@ -353,6 +353,7 @@ def simple_lottery_budget_plan(lottery):
                 "budget_cents", "seed", "contest_number",
                 "allowed_sum_min", "allowed_sum_max",
                 "allowed_odd_min", "allowed_odd_max",
+                "allowed_repeat_min", "allowed_repeat_max",
                 "allowed_max_overlap",
             }
         )
@@ -405,6 +406,29 @@ def simple_lottery_budget_plan(lottery):
         and odd_fields["allowed_odd_min"] > odd_fields["allowed_odd_max"]
     ):
         details.append({"field": "allowed_odd_min", "code": "range_is_reversed"})
+    repeat_fields = {}
+    for field in ("allowed_repeat_min", "allowed_repeat_max"):
+        if field in payload:
+            repeat_fields[field], error = _integer_field(
+                payload,
+                field,
+                minimum=0,
+                maximum=LOTTERIES.get(lottery).quantity if lottery in LOTTERIES else None,
+            )
+            if error:
+                details.append(error)
+    if (
+        "allowed_repeat_min" in repeat_fields
+        and "allowed_repeat_max" in repeat_fields
+        and repeat_fields["allowed_repeat_min"] > repeat_fields["allowed_repeat_max"]
+    ):
+        details.append({"field": "allowed_repeat_min", "code": "range_is_reversed"})
+    if repeat_fields and contest_number is None:
+        details.append({
+            "field": "contest_number",
+            "code": "required_for_repeat_constraint",
+        })
+
     overlap_fields = {}
     if "allowed_max_overlap" in payload:
         overlap_fields["allowed_max_overlap"], error = _integer_field(
@@ -422,6 +446,18 @@ def simple_lottery_budget_plan(lottery):
     if details:
         return _validation_error(details)
 
+    reference_numbers = None
+    if repeat_fields:
+        repository = current_app.extensions["result_repository"]
+        previous_result = repository.get_result(lottery, contest_number - 1)
+        if previous_result is None:
+            return _validation_error([{
+                "field": "contest_number",
+                "code": "previous_official_result_not_available",
+                "previous_contest": contest_number - 1,
+            }])
+        reference_numbers = previous_result["numbers"]
+
     try:
         plan = plan_simple_lottery_budget(
             lottery,
@@ -429,6 +465,8 @@ def simple_lottery_budget_plan(lottery):
             seed=seed,
             **sum_fields,
             **odd_fields,
+            **repeat_fields,
+            reference_numbers=reference_numbers,
             **overlap_fields,
         )
     except ValueError as exc:

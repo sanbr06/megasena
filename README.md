@@ -72,11 +72,13 @@ combinações concretas. No Dia de Sorte, `lucky_month` aparece em
 jogos por requisição para manter o endpoint local previsível.
 
 Esse endpoint também aceita `allowed_sum_min`, `allowed_sum_max`,
-`allowed_odd_min`, `allowed_odd_max` e `allowed_max_overlap` como restrições
-experimentais opcionais. Soma e paridade preservam amostragem uniforme e
-reproduzível dentro do espaço individual filtrado. A sobreposição é uma
-restrição relacional aplicada de forma reproduzível durante a construção da
-carteira. Esses filtros controlam somente a estrutura da carteira: não preveem
+`allowed_odd_min`, `allowed_odd_max`, `allowed_repeat_min`,
+`allowed_repeat_max` e `allowed_max_overlap` como restrições experimentais
+opcionais. Soma e paridade preservam amostragem uniforme e
+reproduzível dentro do espaço individual filtrado. A repetição, quando
+configurada, é medida contra o resultado oficial armazenado do concurso
+imediatamente anterior e exige `contest_number`. A sobreposição é uma restrição
+relacional aplicada de forma reproduzível durante a construção da carteira. Esses filtros controlam somente a estrutura da carteira: não preveem
 resultados nem aumentam a probabilidade futura, e devem ser avaliados contra o
 baseline uniforme no backtest walk-forward.
 

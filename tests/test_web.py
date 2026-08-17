@@ -14,6 +14,8 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b'id="allowed-sum-max"' in response.data
     assert b'id="allowed-odd-min"' in response.data
     assert b'id="allowed-odd-max"' in response.data
+    assert b'id="allowed-repeat-min"' in response.data
+    assert b'id="allowed-repeat-max"' in response.data
     assert b'id="allowed-max-overlap"' in response.data
     assert "restrição estrutural".encode() in response.data
     assert "a chance futura".encode() in response.data
@@ -70,6 +72,8 @@ def test_web_assets_are_available(client):
     assert b"seed" in script.data
     assert b"generation_context" in script.data
     assert b"allowed_sum_min" in script.data
+    assert b"allowed_repeat_min" in script.data
+    assert b"allowed_repeat_max" in script.data
     assert b"allowed_max_overlap" in script.data
     assert b"plan.constraint_disclaimer" in script.data
     assert b"contest_number" in script.data
