@@ -270,3 +270,51 @@ apostas únicas com mais dezenas que cabem no mesmo orçamento.
 Esta versão ainda não compara multiplicidade de prêmios, valor esperado,
 rateios reais ou retorno financeiro. Esses itens pertencem à próxima camada
 do Portfolio Planner.
+
+## Prize Multiplicity and Risk
+
+O Portfolio Planner também separa **probabilidade de ganhar**, **quantidade de
+prêmios** e **valor esperado**.
+
+Em apostas com mais de 6 dezenas, um único sorteio pode gerar várias
+combinações simples premiadas. Para uma aposta com `m` dezenas que acerta
+`h` das 6 dezenas sorteadas, a quantidade de prêmios de uma faixa `r` é:
+
+`C(h, r) * C(m - h, 6 - r)`
+
+para `r = 4, 5, 6`.
+
+Isso reproduz a tabela oficial de multiplicidade da CAIXA. Por exemplo, uma
+aposta de 7 dezenas que contém as 6 dezenas sorteadas recebe 1 Sena e 6
+Quinas; se contém 5 dezenas sorteadas, recebe 2 Quinas e 5 Quadras.
+
+O engine calcula exatamente:
+
+- probabilidade de pelo menos um prêmio;
+- probabilidade de múltiplos prêmios no mesmo sorteio;
+- quantidade esperada de Quadras, Quinas e Senas;
+- concentração de prêmios;
+- valor esperado e variância sob um cenário explícito de rateios.
+
+Com a mesma quantidade de combinações simples e os mesmos valores pagos por
+combinação vencedora, o valor esperado bruto é igual por linearidade da
+esperança. O que muda entre uma aposta concentrada e jogos diversificados é
+a distribuição do risco: cobertura, multiplicidade e variância.
+
+Exemplo estrutural:
+
+```bash
+python -m app.math_core.risk_cli --marked-numbers 7
+```
+
+Exemplo com um cenário de rateios informado pelo analista:
+
+```bash
+python -m app.math_core.risk_cli \
+  --marked-numbers 7 \
+  --sena-payout 5000000 \
+  --quina-payout 50000 \
+  --quadra-payout 1000
+```
+
+Os valores informados são cenários de análise e não previsões de rateio.
