@@ -38,6 +38,27 @@ API: `/health`, `/api/results/<lottery>`, `/api/results/update/<lottery>`, `/api
 
 Use `Authorization: Bearer <API_TOKEN>` quando `API_TOKEN` estiver configurado.
 
+### API analítica v1
+
+O planner de orçamento da Mega-Sena está disponível em
+`POST /api/v1/planners/megasena/budget`. O corpo usa centavos para evitar
+ambiguidade monetária:
+
+```json
+{
+  "budget_cents": 12000,
+  "seed": 42
+}
+```
+
+Um cenário opcional de pagamentos pode ser informado em `payout_scenario`
+com os campos inteiros não negativos `sena_cents`, `quina_cents` e
+`quadra_cents`. Ele é uma hipótese analítica, não uma previsão de rateio.
+Erros da API v1 usam o envelope estável
+`{"api_version":"v1","error":{"code":"...","message":"...","field":"..."}}`;
+`field` aparece quando o erro se refere a um campo específico. O endpoint usa
+a mesma autenticação Bearer das rotas existentes.
+
 ## Docker
 
 ```bash
