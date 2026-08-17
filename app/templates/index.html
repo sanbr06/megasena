@@ -183,6 +183,55 @@
         <p id="history-disclaimer" class="note"></p>
       </div>
     </section>
+
+    <section class="panel" aria-labelledby="backtest-title">
+      <h2 id="backtest-title">Laboratório histórico</h2>
+      <p class="note">
+        Compare, concurso a concurso, uma regra transparente baseada apenas nas
+        frequências anteriores com um jogo uniforme aleatório de baseline. O teste é
+        descritivo, não usa dados futuros e não prevê o próximo sorteio.
+      </p>
+      <form id="backtest-form">
+        <label for="backtest-lottery">Modalidade</label>
+        <select id="backtest-lottery" name="backtest-lottery">
+          <option value="megasena">Mega-Sena</option>
+          <option value="lotofacil">Lotofácil</option>
+          <option value="quina">Quina</option>
+          <option value="diadesorte">Dia de Sorte</option>
+        </select>
+
+        <div class="filter-grid">
+          <div>
+            <label for="minimum-training-draws">Concursos iniciais para treino</label>
+            <input id="minimum-training-draws" type="number" min="1" step="1" value="20" required>
+          </div>
+          <div>
+            <label for="backtest-threshold">Limiar de acertos</label>
+            <input id="backtest-threshold" type="number" min="1" step="1" value="4" required>
+          </div>
+          <div>
+            <label for="backtest-seed">Seed do baseline uniforme</label>
+            <input id="backtest-seed" type="number" step="1" value="42" required>
+          </div>
+        </div>
+        <button type="submit">Executar backtest walk-forward</button>
+      </form>
+      <p id="backtest-status" role="status" aria-live="polite"></p>
+
+      <div id="backtest-results" hidden>
+        <p id="evidence-statement" class="evidence-statement"></p>
+        <p><strong id="backtest-context"></strong></p>
+        <dl class="metrics">
+          <div><dt>Folds fora da amostra</dt><dd id="backtest-folds"></dd></div>
+          <div><dt>Sucesso da regra histórica</dt><dd id="challenger-rate"></dd></div>
+          <div><dt>Sucesso do baseline uniforme</dt><dd id="baseline-rate"></dd></div>
+          <div><dt>Diferença observada</dt><dd id="rate-difference"></dd></div>
+          <div><dt>Valor-p pareado unilateral</dt><dd id="paired-p-value"></dd></div>
+        </dl>
+        <p id="backtest-strategies" class="note"></p>
+        <p id="backtest-disclaimer" class="note"></p>
+      </div>
+    </section>
   </main>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
