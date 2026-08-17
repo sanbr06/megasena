@@ -7,6 +7,13 @@ const lotteryNames = {
   quina: "Quina",
   diadesorte: "Dia de Sorte",
 };
+const caixaLotteryPages = {
+  megasena: "https://loterias.caixa.gov.br/Paginas/Mega-Sena.aspx",
+  lotofacil: "https://loterias.caixa.gov.br/Paginas/Lotofacil.aspx",
+  quina: "https://loterias.caixa.gov.br/Paginas/Quina.aspx",
+  diadesorte: "https://loterias.caixa.gov.br/Paginas/default.aspx",
+};
+let portablePortfolio = null;
 
 const formatMoney = (cents) => new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -32,6 +39,52 @@ const appendComparisonRow = (body, values) => {
     row.append(cell);
   }
   body.append(row);
+};
+
+const gameText = (game, index) => {
+  const numbers = game.numbers.map((number) => String(number).padStart(2, "0")).join(" ");
+  const luckyMonth = game.extraSelection?.lucky_month;
+  return `Jogo ${String(index + 1).padStart(2, "0")}: ${numbers}${luckyMonth ? ` | Mês de Sorte: ${luckyMonth}` : ""}`;
+};
+
+const portfolioText = (portfolio) => [
+  `${portfolio.lotteryName}${portfolio.contestNumber === null ? "" : ` | Concurso ${portfolio.contestNumber}`}`,
+  `Seed: ${portfolio.seed}`,
+  `Versão de preços: ${portfolio.pricingVersion}`,
+  `Custo: ${formatMoney(portfolio.costCents)}`,
+  "Carteira analítica; não comprova registro de aposta.",
+  "",
+  ...portfolio.games.map(gameText),
+].join("\n");
+
+const csvCell = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+
+const portfolioCsv = (portfolio) => {
+  const rows = [
+    ["modalidade", portfolio.lotteryName],
+    ["concurso", portfolio.contestNumber],
+    ["seed", portfolio.seed],
+    ["versao_precos", portfolio.pricingVersion],
+    ["custo_centavos", portfolio.costCents],
+    ["aviso", "Carteira analítica; não comprova registro de aposta."],
+    [],
+    ["jogo", "dezenas", "mes_de_sorte"],
+    ...portfolio.games.map((game, index) => [
+      index + 1,
+      game.numbers.map((number) => String(number).padStart(2, "0")).join(" "),
+      game.extraSelection?.lucky_month || "",
+    ]),
+  ];
+  return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+};
+
+const downloadPortfolio = (contents, extension, mimeType) => {
+  const blob = new Blob([contents], {type: `${mimeType};charset=utf-8`});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `carteira-${portablePortfolio.lottery}-${portablePortfolio.seed}.${extension}`;
+  link.click();
+  URL.revokeObjectURL(link.href);
 };
 
 const renderTrendChart = (container, draws) => {
@@ -178,8 +231,13 @@ form.addEventListener("submit", async (event) => {
 
     const gameList = document.querySelector("#generated-games");
     gameList.replaceChildren();
+    const normalizedGames = [];
     for (const generatedGame of plan.generated_games || []) {
       const numbers = Array.isArray(generatedGame) ? generatedGame : generatedGame.numbers;
+      normalizedGames.push({
+        numbers,
+        extraSelection: Array.isArray(generatedGame) ? null : generatedGame.extra_selection,
+      });
       const item = document.createElement("li");
       item.className = "game-card";
       item.textContent = numbers.map((number) => String(number).padStart(2, "0")).join(" · ");
@@ -195,6 +253,18 @@ form.addEventListener("submit", async (event) => {
     const hasGeneratedGames = plan.generated_games !== null;
     gameList.hidden = !hasGeneratedGames;
     document.querySelector("#generated-games-title").hidden = !hasGeneratedGames;
+    portablePortfolio = normalizedGames.length === 0 ? null : {
+      lottery,
+      lotteryName: lotteryNames[lottery],
+      contestNumber: context.contest_number,
+      seed: context.seed,
+      pricingVersion: plan.pricing_version,
+      costCents: plan.cost_cents,
+      games: normalizedGames,
+    };
+    document.querySelector("#portfolio-actions").hidden = portablePortfolio === null;
+    document.querySelector("#portfolio-action-status").textContent = "";
+    document.querySelector("#caixa-handoff").href = caixaLotteryPages[lottery];
     const explanation = document.querySelector("#portfolio-explanation");
     if (plan.games === 0) {
       explanation.textContent = `O orçamento informado não comporta uma aposta simples de ${lotteryNames[lottery]} nesta versão de preços.`;
@@ -210,6 +280,29 @@ form.addEventListener("submit", async (event) => {
   } catch (error) {
     status.textContent = error.message;
   }
+});
+
+document.querySelector("#copy-games").addEventListener("click", async () => {
+  if (portablePortfolio === null) return;
+  const actionStatus = document.querySelector("#portfolio-action-status");
+  try {
+    await navigator.clipboard.writeText(portfolioText(portablePortfolio));
+    actionStatus.textContent = "Jogos e metadados copiados.";
+  } catch (error) {
+    actionStatus.textContent = "Não foi possível copiar automaticamente; use uma exportação.";
+  }
+});
+
+document.querySelector("#export-txt").addEventListener("click", () => {
+  if (portablePortfolio === null) return;
+  downloadPortfolio(portfolioText(portablePortfolio), "txt", "text/plain");
+  document.querySelector("#portfolio-action-status").textContent = "Arquivo TXT preparado.";
+});
+
+document.querySelector("#export-csv").addEventListener("click", () => {
+  if (portablePortfolio === null) return;
+  downloadPortfolio(portfolioCsv(portablePortfolio), "csv", "text/csv");
+  document.querySelector("#portfolio-action-status").textContent = "Arquivo CSV preparado.";
 });
 
 const historyForm = document.querySelector("#history-form");
