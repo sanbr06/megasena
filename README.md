@@ -45,6 +45,12 @@ recomendar uma estrutura como superior. Um número de concurso opcional identifi
 o contexto da carteira, mas não altera sua geração. O token informado fica
 somente no formulário e não é armazenado.
 
+A interface exibe avisos de jogo responsável e permite configurar um teto pessoal
+opcional por carteira. O teto fica somente no armazenamento local do navegador e
+impede a geração quando o orçamento solicitado é maior. Termos e privacidade da
+versão beta são rascunhos explicitamente sujeitos a revisão jurídica antes de um
+lançamento público.
+
 As carteiras concretas podem ser copiadas ou exportadas em TXT/CSV com modalidade,
 concurso, seed, versão de preços e custo. A interface também oferece um link para a
 página oficial da modalidade na CAIXA. Essas ações não registram aposta: a conferência

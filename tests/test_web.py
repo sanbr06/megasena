@@ -7,6 +7,8 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b'id="lottery"' in response.data
     assert b'value="diadesorte"' in response.data
     assert b'id="seed"' in response.data
+    assert b'id="budget-ceiling"' in response.data
+    assert b'id="budget-warning"' in response.data
     assert b'id="contest-number"' in response.data
     assert b'id="generated-games"' in response.data
     assert b'id="portfolio-actions"' in response.data
@@ -32,6 +34,10 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b"n\xc3\xa3o influencia as combina\xc3\xa7\xc3\xb5es geradas" in response.data
     assert b'/api/v1/megasena/budget-plan' not in response.data
     assert b"n\xc3\xa3o prev\xc3\xaa" in response.data
+    assert "18+ · Aposta não é investimento.".encode() in response.data
+    assert "Não tente recuperar perdas.".encode() in response.data
+    assert "rascunho sujeito a revisão jurídica".encode() in response.data
+    assert "somente em memória".encode() in response.data
 
 
 def test_web_assets_are_available(client):
@@ -70,6 +76,11 @@ def test_web_assets_are_available(client):
     assert b'data.challenger_observed_success_rate' in script.data
     assert b'data.baseline_observed_success_rate' in script.data
     assert b'data.paired_one_sided_p_value' in script.data
+    assert b'megasena.personalBudgetCeiling' in script.data
+    assert b'localStorage.setItem' in script.data
+    assert b'localStorage.removeItem' in script.data
+    assert b'if (!validateBudgetCeiling())' in script.data
+    assert "Plano não gerado".encode() in script.data
     assert manifest.status_code == 200
     assert manifest.json["start_url"] == "/"
     assert manifest.json["display"] == "standalone"
