@@ -119,6 +119,16 @@ o Mês de Sorte é conferido separadamente. Valores de rateio não são inferido
 `/` permite salvar a carteira gerada, listar as carteiras desta instalação e
 acionar a conferência do resultado sem persistir o Bearer token no navegador.
 
+## Beta readiness
+
+O escopo de produto do MVP V2 está preparado para **revisão de beta fechado/local**.
+O checklist técnico e os bloqueios para qualquer lançamento público estão em
+[`docs/BETA_READINESS.md`](docs/BETA_READINESS.md).
+
+Isso não significa autorização para lançamento público: revisão jurídica dos textos
+de termos/privacidade, desenho de autenticação por usuário, HTTPS/servidor WSGI de
+produção e decisões de operação continuam fora do beta local.
+
 ## Docker
 
 ```bash

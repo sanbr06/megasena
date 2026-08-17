@@ -132,3 +132,19 @@ def test_web_javascript_exposes_privacy_preserving_beta_funnel_hooks(client):
     assert b"token" not in hook_source
     assert b"budget" not in hook_source
     assert b"numbers" not in hook_source
+
+
+def test_beta_candidate_exposes_keyboard_and_mobile_readiness(client):
+    page = client.get("/")
+    styles = client.get("/static/styles.css")
+
+    assert page.status_code == 200
+    assert b'name="viewport"' in page.data
+    assert b'class="skip-link"' in page.data
+    assert b'href="#main-content"' in page.data
+    assert b'id="main-content"' in page.data
+    assert styles.status_code == 200
+    assert b":focus-visible" in styles.data
+    assert b"min-height: 44px" in styles.data
+    assert b"@media (max-width: 35rem)" in styles.data
+    assert b"grid-template-columns: 1fr" in styles.data

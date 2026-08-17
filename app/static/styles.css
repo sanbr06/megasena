@@ -6,6 +6,17 @@
 }
 
 body { margin: 0; }
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -5rem;
+  z-index: 10;
+  background: #17231f;
+  color: white;
+  padding: .75rem 1rem;
+  border-radius: .5rem;
+}
+.skip-link:focus { top: 1rem; }
 main { width: min(52rem, calc(100% - 2rem)); margin: 3rem auto; }
 header { margin-bottom: 2rem; }
 h1 { font-size: clamp(2rem, 7vw, 3.5rem); line-height: 1.05; margin: .3rem 0 1rem; }
@@ -25,6 +36,13 @@ input, select { border: 1px solid #82938c; background: white; }
 input:focus, select:focus { outline: 3px solid #a8dfca; border-color: #176b4f; }
 button { border: 0; background: #176b4f; color: white; font-weight: 700; margin-top: .75rem; cursor: pointer; }
 button:hover { background: #10513c; }
+button, .button-link { min-height: 44px; }
+button:focus-visible,
+.button-link:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #a8dfca;
+  outline-offset: 3px;
+}
 .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .65rem; }
 .button-link { box-sizing: border-box; display: grid; place-items: center; width: 100%; padding: .8rem; border: 2px solid #176b4f; border-radius: .5rem; color: #176b4f; font-weight: 700; text-align: center; text-decoration: none; margin-top: .75rem; }
 .button-link:hover { background: #f1f8f5; }
@@ -59,6 +77,20 @@ tbody tr:first-child { background: #f1f8f5; }
 .evidence-statement { border: 2px solid #176b4f; border-radius: .65rem; padding: .8rem; font-weight: 800; }
 
 @media (max-width: 35rem) {
-  main { margin: 1.5rem auto; }
+  main {
+    width: min(100% - 1rem, 52rem);
+    margin: 1rem auto 2rem;
+  }
+  header { margin-bottom: 1rem; }
   .panel { padding: 1rem; }
+  .metrics,
+  .game-list,
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+  .game-card {
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+  th, td { padding: .6rem; }
 }
