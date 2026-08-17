@@ -366,6 +366,96 @@ def test_history_explorer_returns_structured_filter_errors(client, query, field,
     assert {"field": field, "code": code} in response.json["error"]["details"]
 
 
+def test_walk_forward_api_uses_stored_history_and_mandatory_random_baseline(
+    app,
+    client,
+):
+    repository = app.extensions["result_repository"]
+    for contest in range(1, 7):
+        repository.save_result(
+            "megasena",
+            contest,
+            f"{contest:02d}/01/2026",
+            [1, 2, 3, 4, 5, 6],
+            "caixa",
+        )
+
+    response = client.post(
+        "/api/v1/lotteries/megasena/walk-forward-backtest",
+        json={
+            "minimum_training_draws": 2,
+            "threshold": 6,
+            "seed": 17,
+            "significance_level": 0.05,
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    data = response.json["data"]
+    assert data["version"] == "walk-forward/v1"
+    assert data["challenger_strategy"] == "frequency-history/v1"
+    assert data["baseline_strategy"] == "uniform-random/v1"
+    assert data["dataset"] == {
+        "kind": "stored_official_results",
+        "draw_count": 6,
+        "contest_from": 1,
+        "contest_to": 6,
+    }
+    assert [fold["contest"] for fold in data["folds"]] == [3, 4, 5, 6]
+    assert all(
+        fold["training_end_contest"] < fold["contest"]
+        for fold in data["folds"]
+    )
+    assert data["evidence_of_advantage"] is False
+    assert data["evidence_statement"] == "SEM EVIDÊNCIA DE VANTAGEM"
+    assert "não prevê sorteios futuros" in data["disclaimer"]
+
+
+@pytest.mark.parametrize(
+    ("body", "field", "code"),
+    [
+        ({"minimum_training_draws": 0}, "minimum_training_draws", "must_be_at_least"),
+        ({"threshold": 7}, "threshold", "must_be_at_most"),
+        ({"significance_level": 1}, "significance_level", "must_be_less_than"),
+        ({"significance_level": float("inf")}, "significance_level", "must_be_finite"),
+        ({"seed": True}, "seed", "must_be_integer"),
+        ({"unexpected": 1}, "unexpected", "unknown_field"),
+    ],
+)
+def test_walk_forward_api_returns_structured_validation_errors(
+    client,
+    body,
+    field,
+    code,
+):
+    response = client.post(
+        "/api/v1/lotteries/megasena/walk-forward-backtest",
+        json=body,
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+    assert {"field": field, "code": code}.items() <= response.json["error"][
+        "details"
+    ][0].items()
+
+
+def test_walk_forward_api_reports_insufficient_stored_history(client):
+    response = client.post(
+        "/api/v1/lotteries/quina/walk-forward-backtest",
+        json={"minimum_training_draws": 3},
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["details"] == [{
+        "field": "minimum_training_draws",
+        "code": "insufficient_historical_draws",
+        "available_draws": 0,
+    }]
+
+
 def test_history_explorer_preserves_auth_and_lottery_domain(client):
     unauthenticated = client.get(
         "/api/v1/lotteries/megasena/history-explorer"
