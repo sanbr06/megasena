@@ -108,6 +108,34 @@ def test_budget_plan_accepts_explicit_payout_scenario(client):
     assert response.json["data"]["simple_plan"]["payout_risk"] is not None
 
 
+def test_simple_budget_plan_applies_pairwise_overlap_constraint(client):
+    body = {
+        "budget_cents": 2_400,
+        "seed": 91,
+        "allowed_max_overlap": 2,
+    }
+
+    first = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan",
+        json=body,
+        headers=AUTH,
+    )
+    second = client.post(
+        "/api/v1/lotteries/megasena/simple-budget-plan",
+        json=body,
+        headers=AUTH,
+    )
+
+    assert first.status_code == 200
+    assert first.json == second.json
+    data = first.json["data"]
+    assert data["generation_constraints"]["allowed_max_overlap"] == 2
+    games = [game["numbers"] for game in data["generated_games"]]
+    for index, left in enumerate(games):
+        for right in games[index + 1:]:
+            assert len(set(left).intersection(right)) <= 2
+
+
 @pytest.mark.parametrize(
     ("body", "field", "code"),
     [
@@ -291,9 +319,11 @@ def test_simple_budget_plan_combines_sum_and_odd_count_constraints(client):
          "allowed_odd_min", "must_be_at_most"),
         ({"budget_cents": 600, "allowed_odd_min": 4, "allowed_odd_max": 3},
          "allowed_odd_min", "range_is_reversed"),
+        ({"budget_cents": 600, "allowed_max_overlap": 6},
+         "allowed_max_overlap", "must_be_at_most"),
     ],
 )
-def test_simple_budget_plan_validates_sum_constraint(client, body, field, code):
+def test_simple_budget_plan_validates_generation_constraints(client, body, field, code):
     response = client.post(
         "/api/v1/lotteries/megasena/simple-budget-plan",
         json=body,

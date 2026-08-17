@@ -70,7 +70,7 @@
             </div>
           </div>
           <small>
-            Filtrar soma ou quantidade de ímpares apenas define a composição da carteira.
+            Filtrar soma, quantidade de ímpares ou sobreposição apenas define a estrutura da carteira.
             Não prevê resultados nem aumenta a chance futura; avalie estratégias somente
             contra o baseline uniforme.
           </small>
@@ -83,6 +83,14 @@
               <label for="allowed-odd-max">Máximo de ímpares</label>
               <input id="allowed-odd-max" type="number" min="0" step="1">
             </div>
+          </div>
+          <div>
+            <label for="allowed-max-overlap">Sobreposição máxima entre dois jogos</label>
+            <input id="allowed-max-overlap" type="number" min="0" step="1">
+            <small>
+              Limita quantas dezenas dois jogos da mesma carteira podem compartilhar.
+              É uma restrição estrutural, não uma previsão.
+            </small>
           </div>
         </fieldset>
 

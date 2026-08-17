@@ -43,6 +43,7 @@ def plan_simple_lottery_budget(
     allowed_sum_max=None,
     allowed_odd_min=None,
     allowed_odd_max=None,
+    allowed_max_overlap=None,
 ):
     products = {
         product.slug: product
@@ -73,6 +74,7 @@ def plan_simple_lottery_budget(
     disclaimer = None
     if any(value is not None for value in (
         allowed_sum_min, allowed_sum_max, allowed_odd_min, allowed_odd_max,
+        allowed_max_overlap,
     )):
         natural_min = sum(range(config.minimum, config.minimum + config.quantity))
         natural_max = sum(range(config.maximum - config.quantity + 1, config.maximum + 1))
@@ -80,6 +82,9 @@ def plan_simple_lottery_budget(
         maximum_sum = natural_max if allowed_sum_max is None else int(allowed_sum_max)
         minimum_odd = 0 if allowed_odd_min is None else int(allowed_odd_min)
         maximum_odd = config.quantity if allowed_odd_max is None else int(allowed_odd_max)
+        maximum_overlap = (
+            None if allowed_max_overlap is None else int(allowed_max_overlap)
+        )
         constraints = {}
         if allowed_sum_min is not None or allowed_sum_max is not None:
             constraints.update({
@@ -91,6 +96,8 @@ def plan_simple_lottery_budget(
                 "allowed_odd_min": minimum_odd,
                 "allowed_odd_max": maximum_odd,
             })
+        if allowed_max_overlap is not None:
+            constraints["allowed_max_overlap"] = maximum_overlap
         disclaimer = (
             "A aplicação dessas restrições de composição não prevê resultados nem aumenta "
             "a probabilidade futura."
@@ -102,6 +109,7 @@ def plan_simple_lottery_budget(
             maximum_sum=maximum_sum,
             minimum_odd_count=minimum_odd,
             maximum_odd_count=maximum_odd,
+            maximum_pairwise_overlap=maximum_overlap,
             seed=seed,
         )) if games else []
     else:
