@@ -3,7 +3,10 @@ from math import comb
 
 from app.lotteries import LOTTERIES
 from app.lotteries.catalog import lottery_product_catalog
-from app.math_core.portfolio import generate_random_portfolio
+from app.math_core.portfolio import (
+    generate_random_portfolio,
+    generate_sum_constrained_portfolio,
+)
 
 MAX_GENERATED_GAMES = 1_000
 
@@ -27,9 +30,18 @@ class SimpleLotteryBudgetPlan:
     jackpot_probability: float
     seed: int
     generated_games: list[GeneratedSimpleGame]
+    generation_constraints: dict[str, int] | None
+    constraint_disclaimer: str | None
 
 
-def plan_simple_lottery_budget(lottery, budget_cents, *, seed=42):
+def plan_simple_lottery_budget(
+    lottery,
+    budget_cents,
+    *,
+    seed=42,
+    allowed_sum_min=None,
+    allowed_sum_max=None,
+):
     products = {
         product.slug: product
         for product in lottery_product_catalog()
@@ -55,11 +67,31 @@ def plan_simple_lottery_budget(lottery, budget_cents, *, seed=42):
     if games > MAX_GENERATED_GAMES:
         raise ValueError("generation_limit_exceeded")
 
-    number_games = (
-        sorted(generate_random_portfolio(config, games, seed=seed))
-        if games
-        else []
-    )
+    constraints = None
+    disclaimer = None
+    if allowed_sum_min is not None or allowed_sum_max is not None:
+        natural_min = sum(range(config.minimum, config.minimum + config.quantity))
+        natural_max = sum(range(config.maximum - config.quantity + 1, config.maximum + 1))
+        minimum_sum = natural_min if allowed_sum_min is None else int(allowed_sum_min)
+        maximum_sum = natural_max if allowed_sum_max is None else int(allowed_sum_max)
+        constraints = {"allowed_sum_min": minimum_sum, "allowed_sum_max": maximum_sum}
+        disclaimer = (
+            "A faixa de soma é uma restrição transparente de composição; "
+            "não prevê resultados nem aumenta a probabilidade futura."
+        )
+        number_games = sorted(generate_sum_constrained_portfolio(
+            config,
+            games,
+            minimum_sum=minimum_sum,
+            maximum_sum=maximum_sum,
+            seed=seed,
+        )) if games else []
+    else:
+        number_games = (
+            sorted(generate_random_portfolio(config, games, seed=seed))
+            if games
+            else []
+        )
     generated_games = []
     for index, numbers in enumerate(number_games):
         extra_selection = None
@@ -86,6 +118,8 @@ def plan_simple_lottery_budget(lottery, budget_cents, *, seed=42):
         jackpot_probability=games / total_combinations,
         seed=seed,
         generated_games=generated_games,
+        generation_constraints=constraints,
+        constraint_disclaimer=disclaimer,
     )
 
 
