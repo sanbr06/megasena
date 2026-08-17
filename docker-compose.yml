@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - lottery_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  lottery_data:
