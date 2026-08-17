@@ -59,6 +59,13 @@ O planner comparativo da Mega-Sena também devolve combinações concretas para
 até 1.000 jogos. Acima de 20 jogos elas são uniformes e reproduzíveis pelo seed,
 mas não recebem o certificado de Quadra+ nem perfis de risco que dependem dele.
 
+O explorador histórico descritivo está disponível em
+`GET /api/v1/lotteries/<modalidade>/history-explorer`. Ele aceita os filtros
+`contest_from`, `contest_to`, `date_from` e `date_to` (datas ISO `AAAA-MM-DD`) e
+retorna frequência/recência por dezena, soma, paridade, repetição em relação ao
+concurso anterior dentro do recorte e contagem por faixas de dez dezenas. Essas
+métricas descrevem os resultados oficiais armazenados; não predizem sorteios.
+
 ## Docker
 
 ```bash

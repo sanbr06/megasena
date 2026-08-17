@@ -284,3 +284,97 @@ def test_megasena_budget_plan_rejects_more_than_generation_limit(client):
         "code": "generation_limit_exceeded",
         "maximum_generated_games": 1_000,
     }]
+
+
+def test_history_explorer_filters_and_returns_descriptive_metrics(app, client):
+    repository = app.extensions["result_repository"]
+    repository.save_result(
+        "megasena", 100, "01/01/2026", [1, 2, 3, 4, 5, 6], "caixa"
+    )
+    repository.save_result(
+        "megasena", 101, "08/01/2026", [1, 2, 10, 11, 20, 60], "caixa"
+    )
+    repository.save_result(
+        "megasena", 102, "15/01/2026", [7, 8, 9, 10, 11, 12], "caixa"
+    )
+
+    response = client.get(
+        "/api/v1/lotteries/megasena/history-explorer"
+        "?contest_from=100&contest_to=101&date_from=2026-01-01",
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    data = response.json["data"]
+    assert data["draw_count"] == 2
+    assert data["filters"] == {
+        "contest_from": 100,
+        "contest_to": 101,
+        "date_from": "2026-01-01",
+        "date_to": None,
+    }
+    assert data["draws"][0]["repeated_from_previous"] is None
+    assert data["draws"][1] == {
+        "contest": 101,
+        "draw_date": "2026-01-08",
+        "numbers": [1, 2, 10, 11, 20, 60],
+        "odd_count": 2,
+        "even_count": 4,
+        "sum": 104,
+        "repeated_from_previous": 2,
+        "band_counts": [
+            {"start": 1, "end": 10, "count": 3},
+            {"start": 11, "end": 20, "count": 2},
+            {"start": 21, "end": 30, "count": 0},
+            {"start": 31, "end": 40, "count": 0},
+            {"start": 41, "end": 50, "count": 0},
+            {"start": 51, "end": 60, "count": 1},
+        ],
+    }
+    metrics = {item["number"]: item for item in data["number_metrics"]}
+    assert metrics[1] == {"number": 1, "frequency": 2, "draws_since_last_seen": 0}
+    assert metrics[3] == {"number": 3, "frequency": 1, "draws_since_last_seen": 1}
+    assert metrics[59] == {
+        "number": 59,
+        "frequency": 0,
+        "draws_since_last_seen": None,
+    }
+    assert "não são previsão" in data["disclaimer"]
+
+
+@pytest.mark.parametrize(
+    ("query", "field", "code"),
+    [
+        ("contest_from=x", "contest_from", "must_be_integer"),
+        ("date_from=01/01/2026", "date_from", "must_be_iso_date"),
+        (
+            "contest_from=20&contest_to=10",
+            "contest_from",
+            "range_is_reversed",
+        ),
+        ("unexpected=1", "unexpected", "unknown_field"),
+    ],
+)
+def test_history_explorer_returns_structured_filter_errors(client, query, field, code):
+    response = client.get(
+        f"/api/v1/lotteries/megasena/history-explorer?{query}",
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+    assert response.json["error"]["code"] == "validation_error"
+    assert {"field": field, "code": code} in response.json["error"]["details"]
+
+
+def test_history_explorer_preserves_auth_and_lottery_domain(client):
+    unauthenticated = client.get(
+        "/api/v1/lotteries/megasena/history-explorer"
+    )
+    unknown = client.get(
+        "/api/v1/lotteries/inexistente/history-explorer",
+        headers=AUTH,
+    )
+
+    assert unauthenticated.status_code == 401
+    assert unknown.status_code == 404
+    assert unknown.json["error"]["code"] == "lottery_not_found"
