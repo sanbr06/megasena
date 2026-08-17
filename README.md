@@ -273,9 +273,18 @@ A saída inclui orçamento usado, saldo não utilizado, quantidade de jogos,
 probabilidade de Sena, probabilidade certificada de Quadra+ e perfis das
 apostas únicas com mais dezenas que cabem no mesmo orçamento.
 
-Esta versão ainda não compara multiplicidade de prêmios, valor esperado,
-rateios reais ou retorno financeiro. Esses itens pertencem à próxima camada
-do Portfolio Planner.
+Valor esperado financeiro e variância de pagamento só são calculados quando
+o analista fornece um cenário explícito para as três faixas de prêmio:
+
+```bash
+python -m app.math_core.budget_cli \
+  --budget 120 \
+  --sena-payout 5000000 \
+  --quina-payout 50000 \
+  --quadra-payout 1000
+```
+
+Esses valores são cenários analíticos, não previsões de rateios reais.
 
 ## Prize Multiplicity and Risk
 
