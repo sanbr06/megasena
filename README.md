@@ -418,6 +418,15 @@ contrário, o resultado declara `no_evidence_of_historical_advantage`.
 Esse backtest mede desempenho histórico fora da amostra. Ele não prevê sorteios
 futuros e não altera a probabilidade matemática de uma combinação individual.
 
+O backtest também está disponível na API autenticada em
+`POST /api/v1/lotteries/<modalidade>/walk-forward-backtest`. O corpo aceita
+`minimum_training_draws`, `threshold`, `seed` e `significance_level`. A resposta
+identifica a versão das duas estratégias, o intervalo dos resultados oficiais
+armazenados, cada dobra treino/teste e a baseline uniforme obrigatória. Quando o
+teste pareado não sustenta vantagem, a API declara explicitamente
+`SEM EVIDÊNCIA DE VANTAGEM`. Para Dia de Sorte, esta análise considera somente
+acertos de dezenas e identifica que o Mês de Sorte ficou fora do escopo.
+
 ## Exact Certificates for Supported Lotteries
 
 O certificado de eventos de prêmio disjuntos também pode ser aplicado às

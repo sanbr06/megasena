@@ -1,4 +1,6 @@
+from dataclasses import asdict
 from datetime import date
+from math import isfinite
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -16,6 +18,7 @@ from app.math_core.simple_budget import (
     plan_simple_lottery_budget,
     simple_budget_plan_as_dict,
 )
+from app.math_core.walk_forward import walk_forward_frequency_backtest
 from app.services.historical_explorer import explore_history
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/api/v1")
@@ -116,6 +119,28 @@ def _query_date(field):
         return date.fromisoformat(raw), None
     except ValueError:
         return None, {"field": field, "code": "must_be_iso_date"}
+
+
+def _number_field(payload, field, *, default=None, exclusive_minimum=None,
+                  exclusive_maximum=None):
+    value = payload.get(field, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None, {"field": field, "code": "must_be_number"}
+    if not isfinite(value):
+        return None, {"field": field, "code": "must_be_finite"}
+    if exclusive_minimum is not None and value <= exclusive_minimum:
+        return None, {
+            "field": field,
+            "code": "must_be_greater_than",
+            "minimum": exclusive_minimum,
+        }
+    if exclusive_maximum is not None and value >= exclusive_maximum:
+        return None, {
+            "field": field,
+            "code": "must_be_less_than",
+            "maximum": exclusive_maximum,
+        }
+    return float(value), None
 
 
 def _parse_payout_scenario(payload):
@@ -355,4 +380,104 @@ def historical_explorer(lottery):
 
     repository = current_app.extensions["result_repository"]
     data = explore_history(repository.list_results(lottery), lottery, **filters)
+    return jsonify({"api_version": "v1", "data": data})
+
+
+@api_v1.post("/lotteries/<lottery>/walk-forward-backtest")
+@require_token
+def walk_forward_backtest(lottery):
+    if lottery not in LOTTERIES:
+        return jsonify({
+            "api_version": "v1",
+            "error": {
+                "code": "lottery_not_found",
+                "message": "Lottery is not supported.",
+                "details": [{"field": "lottery", "value": lottery}],
+            },
+        }), 404
+    if not request.is_json:
+        return _validation_error([{"field": "body", "code": "json_required"}])
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return _validation_error([{"field": "body", "code": "must_be_object"}])
+
+    allowed_fields = {
+        "minimum_training_draws", "threshold", "seed", "significance_level",
+    }
+    details = [
+        {"field": field, "code": "unknown_field"}
+        for field in sorted(set(payload) - allowed_fields)
+    ]
+    minimum_training_draws, error = _integer_field(
+        payload, "minimum_training_draws", default=20, minimum=1,
+    )
+    if error:
+        details.append(error)
+    threshold, error = _integer_field(
+        payload,
+        "threshold",
+        default=LOTTERIES[lottery].quantity,
+        minimum=1,
+        maximum=LOTTERIES[lottery].quantity,
+    )
+    if error:
+        details.append(error)
+    seed, error = _integer_field(payload, "seed", default=42)
+    if error:
+        details.append(error)
+    significance_level, error = _number_field(
+        payload,
+        "significance_level",
+        default=0.05,
+        exclusive_minimum=0,
+        exclusive_maximum=1,
+    )
+    if error:
+        details.append(error)
+    if details:
+        return _validation_error(details)
+
+    repository = current_app.extensions["result_repository"]
+    draws = repository.list_results(lottery)
+    try:
+        result = walk_forward_frequency_backtest(
+            LOTTERIES[lottery],
+            draws,
+            minimum_training_draws=minimum_training_draws,
+            threshold=threshold,
+            seed=seed,
+            significance_level=significance_level,
+        )
+    except ValueError as exc:
+        if str(exc) == "insufficient_historical_draws":
+            return _validation_error([{
+                "field": "minimum_training_draws",
+                "code": "insufficient_historical_draws",
+                "available_draws": len(draws),
+            }])
+        raise
+
+    data = asdict(result)
+    contests = [draw["contest"] for draw in draws]
+    data["dataset"] = {
+        "kind": "stored_official_results",
+        "draw_count": len(draws),
+        "contest_from": min(contests),
+        "contest_to": max(contests),
+    }
+    data["analysis_scope"] = (
+        "number_hits_only_excludes_lucky_month"
+        if lottery == "diadesorte"
+        else "number_hits"
+    )
+    data["evidence_statement"] = (
+        "EVIDÊNCIA HISTÓRICA DE VANTAGEM"
+        if result.evidence_of_advantage
+        else "SEM EVIDÊNCIA DE VANTAGEM"
+    )
+    data["disclaimer"] = (
+        "Desempenho histórico fora da amostra não prevê sorteios futuros nem altera "
+        "a probabilidade matemática de uma combinação individual."
+    )
     return jsonify({"api_version": "v1", "data": data})
