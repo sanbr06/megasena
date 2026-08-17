@@ -66,6 +66,15 @@ budgetCeilingInput.addEventListener("change", () => {
 });
 document.querySelector("#budget").addEventListener("input", validateBudgetCeiling);
 
+const appScreens = document.querySelectorAll(".app-screen");
+const showScreen = (id) => {
+  appScreens.forEach((screen) => screen.classList.toggle("is-active", screen.id === id));
+  window.scrollTo({top: 0, behavior: "smooth"});
+};
+document.querySelectorAll("[data-nav]").forEach((trigger) => {
+  trigger.addEventListener("click", () => showScreen(trigger.dataset.nav));
+});
+
 const lotteryHiddenInput = document.querySelector("#lottery");
 document.querySelectorAll('input[name="lottery-choice"]').forEach((radio) => {
   radio.addEventListener("change", () => {
@@ -483,6 +492,7 @@ form.addEventListener("submit", async (event) => {
     constraintDisclaimer.textContent = plan.constraint_disclaimer || "";
     status.textContent = "Plano calculado com sucesso.";
     results.hidden = false;
+    showScreen("results");
     emitBetaFunnelEvent("portfolio_generated", lottery);
   } catch (error) {
     status.textContent = error.message;

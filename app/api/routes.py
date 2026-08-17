@@ -8,7 +8,10 @@ api = Blueprint("api", __name__)
 
 @api.get("/")
 def index():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        api_token=current_app.config.get("API_TOKEN", ""),
+    )
 
 
 def services():
