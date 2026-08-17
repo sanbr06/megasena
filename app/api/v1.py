@@ -6,7 +6,10 @@ from flask import Blueprint, current_app, jsonify, request
 
 from app.core.security import require_token
 from app.lotteries import LOTTERIES
-from app.lotteries.catalog import lottery_product_catalog_as_dict
+from app.lotteries.catalog import (
+    lottery_product_catalog,
+    lottery_product_catalog_as_dict,
+)
 from app.math_core.budget import (
     MEGASENA_SIMPLE_GAME_COST_CENTS,
     budget_result_as_dict,
@@ -141,6 +144,78 @@ def _number_field(payload, field, *, default=None, exclusive_minimum=None,
             "maximum": exclusive_maximum,
         }
     return float(value), None
+
+
+def _validate_saved_games(games, product):
+    if not isinstance(games, list) or not games:
+        return [{"field": "games", "code": "must_be_non_empty_array"}]
+    if len(games) > MAX_GENERATED_GAMES:
+        return [{
+            "field": "games",
+            "code": "must_have_at_most",
+            "maximum": MAX_GENERATED_GAMES,
+        }]
+
+    details = []
+    seen_games = set()
+    for index, game in enumerate(games):
+        field = f"games[{index}]"
+        if not isinstance(game, dict):
+            details.append({"field": field, "code": "must_be_object"})
+            continue
+        allowed = {"numbers", "extra_selection"}
+        for key in sorted(set(game) - allowed):
+            details.append({"field": f"{field}.{key}", "code": "unknown_field"})
+        numbers = game.get("numbers")
+        if (
+            not isinstance(numbers, list)
+            or len(numbers) != product.draw_size
+            or any(isinstance(number, bool) or not isinstance(number, int) for number in numbers)
+        ):
+            details.append({
+                "field": f"{field}.numbers",
+                "code": "invalid_combination",
+                "required_numbers": product.draw_size,
+            })
+        elif (
+            len(set(numbers)) != len(numbers)
+            or any(
+                number < product.minimum_number or number > product.maximum_number
+                for number in numbers
+            )
+        ):
+            details.append({
+                "field": f"{field}.numbers",
+                "code": "numbers_must_be_unique_and_in_range",
+                "minimum": product.minimum_number,
+                "maximum": product.maximum_number,
+            })
+        else:
+            extra = game.get("extra_selection")
+            extra_value = (
+                extra.get(product.extra_selection.key)
+                if product.extra_selection is not None and isinstance(extra, dict)
+                else None
+            )
+            game_key = (tuple(sorted(numbers)), extra_value)
+            if game_key in seen_games:
+                details.append({"field": f"{field}.numbers", "code": "duplicate_game"})
+            seen_games.add(game_key)
+
+        extra = game.get("extra_selection")
+        if product.extra_selection is None:
+            if extra is not None:
+                details.append({"field": f"{field}.extra_selection", "code": "not_supported"})
+        elif (
+            not isinstance(extra, dict)
+            or set(extra) != {product.extra_selection.key}
+            or extra[product.extra_selection.key] not in product.extra_selection.options
+        ):
+            details.append({
+                "field": f"{field}.extra_selection",
+                "code": "invalid_extra_selection",
+            })
+    return details
 
 
 def _parse_payout_scenario(payload):
@@ -481,3 +556,129 @@ def walk_forward_backtest(lottery):
         "a probabilidade matemática de uma combinação individual."
     )
     return jsonify({"api_version": "v1", "data": data})
+
+
+@api_v1.post("/portfolios")
+@require_token
+def save_portfolio():
+    if not request.is_json:
+        return _validation_error([{"field": "body", "code": "json_required"}])
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return _validation_error([{"field": "body", "code": "must_be_object"}])
+
+    allowed = {"lottery", "contest", "games", "strategy", "seed", "cost_snapshot"}
+    required = allowed
+    details = [
+        {"field": field, "code": "unknown_field"}
+        for field in sorted(set(payload) - allowed)
+    ]
+    details.extend(
+        {"field": field, "code": "required"}
+        for field in sorted(required - set(payload))
+    )
+
+    products = {product.slug: product for product in lottery_product_catalog()}
+    lottery = payload.get("lottery")
+    product = products.get(lottery) if isinstance(lottery, str) else None
+    if "lottery" in payload and product is None:
+        details.append({"field": "lottery", "code": "unsupported_lottery"})
+
+    contest = seed = None
+    if "contest" in payload:
+        contest, error = _integer_field(payload, "contest", minimum=1)
+        if error:
+            details.append(error)
+    if "seed" in payload:
+        seed, error = _integer_field(payload, "seed")
+        if error:
+            details.append(error)
+
+    games = payload.get("games")
+    if product is not None and "games" in payload:
+        details.extend(_validate_saved_games(games, product))
+
+    strategy = payload.get("strategy")
+    if "strategy" in payload:
+        if not isinstance(strategy, dict):
+            details.append({"field": "strategy", "code": "must_be_object"})
+        else:
+            for field in sorted(set(strategy) - {"name", "version", "parameters"}):
+                details.append({"field": f"strategy.{field}", "code": "unknown_field"})
+            for field in ("name", "version"):
+                if not isinstance(strategy.get(field), str) or not strategy[field].strip():
+                    details.append({
+                        "field": f"strategy.{field}",
+                        "code": "must_be_non_empty_string",
+                    })
+            if not isinstance(strategy.get("parameters"), dict):
+                details.append({"field": "strategy.parameters", "code": "must_be_object"})
+
+    cost_snapshot = payload.get("cost_snapshot")
+    if "cost_snapshot" in payload:
+        if not isinstance(cost_snapshot, dict):
+            details.append({"field": "cost_snapshot", "code": "must_be_object"})
+        else:
+            cost_fields = {
+                "pricing_version", "simple_game_cost_cents", "total_cost_cents",
+            }
+            for field in sorted(set(cost_snapshot) - cost_fields):
+                details.append({"field": f"cost_snapshot.{field}", "code": "unknown_field"})
+            if product is not None:
+                game_count = len(games) if isinstance(games, list) else 0
+                expected = {
+                    "pricing_version": product.pricing_version,
+                    "simple_game_cost_cents": product.simple_game_cost_cents,
+                    "total_cost_cents": product.simple_game_cost_cents * game_count,
+                }
+                for field, expected_value in expected.items():
+                    if cost_snapshot.get(field) != expected_value:
+                        details.append({
+                            "field": f"cost_snapshot.{field}",
+                            "code": "must_match_pricing_snapshot",
+                            "expected": expected_value,
+                        })
+
+    if details:
+        return _validation_error(details)
+
+    normalized = {
+        "lottery": lottery,
+        "contest": contest,
+        "games": [
+            {
+                "numbers": sorted(game["numbers"]),
+                "extra_selection": game.get("extra_selection"),
+            }
+            for game in games
+        ],
+        "strategy": {
+            "name": strategy["name"].strip(),
+            "version": strategy["version"].strip(),
+            "parameters": strategy["parameters"],
+        },
+        "seed": seed,
+        "cost_snapshot": cost_snapshot,
+    }
+    repository = current_app.extensions["portfolio_repository"]
+    return jsonify({
+        "api_version": "v1",
+        "data": repository.save(normalized),
+    }), 201
+
+
+@api_v1.get("/portfolios/<int:portfolio_id>")
+@require_token
+def get_portfolio(portfolio_id):
+    repository = current_app.extensions["portfolio_repository"]
+    portfolio = repository.get(portfolio_id)
+    if portfolio is None:
+        return jsonify({
+            "api_version": "v1",
+            "error": {
+                "code": "portfolio_not_found",
+                "message": "Saved portfolio was not found.",
+                "details": [{"field": "portfolio_id", "value": portfolio_id}],
+            },
+        }), 404
+    return jsonify({"api_version": "v1", "data": portfolio})
