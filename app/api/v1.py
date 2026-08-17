@@ -206,7 +206,9 @@ def simple_lottery_budget_plan(lottery):
 
     details = [
         {"field": field, "code": "unknown_field"}
-        for field in sorted(set(payload) - {"budget_cents", "seed"})
+        for field in sorted(
+            set(payload) - {"budget_cents", "seed", "contest_number"}
+        )
     ]
     if "budget_cents" not in payload:
         details.append({"field": "budget_cents", "code": "required"})
@@ -220,6 +222,15 @@ def simple_lottery_budget_plan(lottery):
     seed, error = _integer_field(payload, "seed", default=42)
     if error:
         details.append(error)
+    contest_number = None
+    if "contest_number" in payload:
+        contest_number, error = _integer_field(
+            payload,
+            "contest_number",
+            minimum=1,
+        )
+        if error:
+            details.append(error)
     if details:
         return _validation_error(details)
 
@@ -247,7 +258,13 @@ def simple_lottery_budget_plan(lottery):
             }])
         raise
 
+    data = simple_budget_plan_as_dict(plan)
+    data["generation_context"] = {
+        "lottery": lottery,
+        "contest_number": contest_number,
+        "seed": seed,
+    }
     return jsonify({
         "api_version": "v1",
-        "data": simple_budget_plan_as_dict(plan),
+        "data": data,
     })
