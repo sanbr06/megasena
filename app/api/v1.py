@@ -1,6 +1,9 @@
+from datetime import date
+
 from flask import Blueprint, current_app, jsonify, request
 
 from app.core.security import require_token
+from app.lotteries import LOTTERIES
 from app.lotteries.catalog import lottery_product_catalog_as_dict
 from app.math_core.budget import (
     MEGASENA_SIMPLE_GAME_COST_CENTS,
@@ -13,6 +16,7 @@ from app.math_core.simple_budget import (
     plan_simple_lottery_budget,
     simple_budget_plan_as_dict,
 )
+from app.services.historical_explorer import explore_history
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 
@@ -89,6 +93,29 @@ def _integer_field(payload, field, *, default=None, minimum=None, maximum=None):
             "maximum": maximum,
         }
     return value, None
+
+
+def _query_integer(field, *, minimum=None):
+    raw = request.args.get(field)
+    if raw is None:
+        return None, None
+    try:
+        value = int(raw)
+    except ValueError:
+        return None, {"field": field, "code": "must_be_integer"}
+    if minimum is not None and value < minimum:
+        return None, {"field": field, "code": "must_be_at_least", "minimum": minimum}
+    return value, None
+
+
+def _query_date(field):
+    raw = request.args.get(field)
+    if raw is None:
+        return None, None
+    try:
+        return date.fromisoformat(raw), None
+    except ValueError:
+        return None, {"field": field, "code": "must_be_iso_date"}
 
 
 def _parse_payout_scenario(payload):
@@ -282,3 +309,50 @@ def simple_lottery_budget_plan(lottery):
         "api_version": "v1",
         "data": data,
     })
+
+
+@api_v1.get("/lotteries/<lottery>/history-explorer")
+@require_token
+def historical_explorer(lottery):
+    if lottery not in LOTTERIES:
+        return jsonify({
+            "api_version": "v1",
+            "error": {
+                "code": "lottery_not_found",
+                "message": "Lottery is not supported.",
+                "details": [{"field": "lottery", "value": lottery}],
+            },
+        }), 404
+
+    allowed_fields = {"contest_from", "contest_to", "date_from", "date_to"}
+    details = [
+        {"field": field, "code": "unknown_field"}
+        for field in sorted(set(request.args) - allowed_fields)
+    ]
+    filters = {}
+    for field in ("contest_from", "contest_to"):
+        filters[field], error = _query_integer(field, minimum=1)
+        if error:
+            details.append(error)
+    for field in ("date_from", "date_to"):
+        filters[field], error = _query_date(field)
+        if error:
+            details.append(error)
+    if (
+        filters["contest_from"] is not None
+        and filters["contest_to"] is not None
+        and filters["contest_from"] > filters["contest_to"]
+    ):
+        details.append({"field": "contest_from", "code": "range_is_reversed"})
+    if (
+        filters["date_from"] is not None
+        and filters["date_to"] is not None
+        and filters["date_from"] > filters["date_to"]
+    ):
+        details.append({"field": "date_from", "code": "range_is_reversed"})
+    if details:
+        return _validation_error(details)
+
+    repository = current_app.extensions["result_repository"]
+    data = explore_history(repository.list_results(lottery), lottery, **filters)
+    return jsonify({"api_version": "v1", "data": data})
