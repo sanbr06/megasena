@@ -151,3 +151,70 @@ form.addEventListener("submit", async (event) => {
     status.textContent = error.message;
   }
 });
+
+const historyForm = document.querySelector("#history-form");
+const historyStatus = document.querySelector("#history-status");
+const historyResults = document.querySelector("#history-results");
+
+historyForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  historyResults.hidden = true;
+  historyStatus.textContent = "Carregando histórico…";
+
+  const lottery = document.querySelector("#history-lottery").value;
+  const token = document.querySelector("#token").value;
+  const parameters = new URLSearchParams();
+  for (const [field, elementId] of [
+    ["contest_from", "#contest-from"],
+    ["contest_to", "#contest-to"],
+    ["date_from", "#date-from"],
+    ["date_to", "#date-to"],
+  ]) {
+    const value = document.querySelector(elementId).value;
+    if (value !== "") parameters.set(field, value);
+  }
+
+  try {
+    const query = parameters.toString();
+    const endpoint = `/api/v1/lotteries/${lottery}/history-explorer${query ? `?${query}` : ""}`;
+    const response = await fetch(endpoint, {
+      headers: {"Authorization": `Bearer ${token}`},
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error?.message || payload.error || "Falha ao carregar o histórico.");
+    }
+
+    const data = payload.data;
+    document.querySelector("#history-context").textContent =
+      `${lotteryNames[lottery]} · ${data.draw_count} concurso(s) no recorte`;
+    document.querySelector("#history-disclaimer").textContent = data.disclaimer;
+
+    const maximumFrequency = Math.max(0, ...data.number_metrics.map((item) => item.frequency));
+    const heatmap = document.querySelector("#frequency-heatmap");
+    const metricsBody = document.querySelector("#number-metrics");
+    heatmap.replaceChildren();
+    metricsBody.replaceChildren();
+    for (const metric of data.number_metrics) {
+      const intensity = maximumFrequency === 0 ? 0 : metric.frequency / maximumFrequency;
+      const cell = document.createElement("span");
+      cell.className = "heatmap-cell";
+      cell.style.setProperty("--intensity", intensity);
+      cell.textContent = String(metric.number).padStart(2, "0");
+      cell.title = `Dezena ${metric.number}: ${metric.frequency} ocorrência(s)`;
+      heatmap.append(cell);
+
+      appendComparisonRow(metricsBody, [
+        String(metric.number).padStart(2, "0"),
+        String(metric.frequency),
+        metric.draws_since_last_seen === null
+          ? "Sem ocorrência no recorte"
+          : String(metric.draws_since_last_seen),
+      ]);
+    }
+    historyStatus.textContent = "Histórico carregado.";
+    historyResults.hidden = false;
+  } catch (error) {
+    historyStatus.textContent = error.message;
+  }
+});

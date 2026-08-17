@@ -102,6 +102,63 @@
         está fora do limite certificado.
       </p>
     </section>
+
+    <section class="panel" aria-labelledby="history-title">
+      <h2 id="history-title">Explorador histórico</h2>
+      <p class="note">
+        Explore frequência e recência nos resultados oficiais armazenados. Padrões
+        históricos são descritivos e não indicam quais dezenas serão sorteadas.
+      </p>
+      <form id="history-form">
+        <label for="history-lottery">Modalidade</label>
+        <select id="history-lottery" name="history-lottery">
+          <option value="megasena">Mega-Sena</option>
+          <option value="lotofacil">Lotofácil</option>
+          <option value="quina">Quina</option>
+          <option value="diadesorte">Dia de Sorte</option>
+        </select>
+
+        <div class="filter-grid">
+          <div>
+            <label for="contest-from">Concurso inicial</label>
+            <input id="contest-from" type="number" min="1" step="1">
+          </div>
+          <div>
+            <label for="contest-to">Concurso final</label>
+            <input id="contest-to" type="number" min="1" step="1">
+          </div>
+          <div>
+            <label for="date-from">Data inicial</label>
+            <input id="date-from" type="date">
+          </div>
+          <div>
+            <label for="date-to">Data final</label>
+            <input id="date-to" type="date">
+          </div>
+        </div>
+        <button type="submit">Explorar histórico</button>
+      </form>
+      <p id="history-status" role="status" aria-live="polite"></p>
+
+      <div id="history-results" hidden>
+        <p><strong id="history-context"></strong></p>
+        <div id="frequency-heatmap" class="heatmap" aria-hidden="true"></div>
+        <div class="table-scroll" tabindex="0" aria-label="Frequência e recência por dezena">
+          <table>
+            <caption>Dados equivalentes à visualização por intensidade</caption>
+            <thead>
+              <tr>
+                <th scope="col">Dezena</th>
+                <th scope="col">Frequência</th>
+                <th scope="col">Concursos desde a última ocorrência</th>
+              </tr>
+            </thead>
+            <tbody id="number-metrics"></tbody>
+          </table>
+        </div>
+        <p id="history-disclaimer" class="note"></p>
+      </div>
+    </section>
   </main>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
