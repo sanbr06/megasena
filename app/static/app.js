@@ -66,6 +66,28 @@ budgetCeilingInput.addEventListener("change", () => {
 });
 document.querySelector("#budget").addEventListener("input", validateBudgetCeiling);
 
+const lotteryHiddenInput = document.querySelector("#lottery");
+document.querySelectorAll('input[name="lottery-choice"]').forEach((radio) => {
+  radio.addEventListener("change", () => {
+    if (radio.checked) lotteryHiddenInput.value = radio.value;
+  });
+});
+
+const budgetInput = document.querySelector("#budget");
+const budgetChips = document.querySelectorAll(".chip[data-amount]");
+const syncBudgetChips = () => {
+  budgetChips.forEach((chip) => {
+    chip.setAttribute("aria-pressed", String(Number(chip.dataset.amount) === Number(budgetInput.value)));
+  });
+};
+budgetChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    budgetInput.value = chip.dataset.amount;
+    budgetInput.dispatchEvent(new Event("input", {bubbles: true}));
+  });
+});
+budgetInput.addEventListener("input", syncBudgetChips);
+
 const formatMoney = (cents) => new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -80,6 +102,17 @@ const formatOptionalProbability = (value) => (
   value === null || value === undefined
     ? "Não certificado para esta carteira"
     : formatProbability(value)
+);
+
+const formatOdds = (value) => {
+  if (!Number.isFinite(value) || value <= 0) return "Não certificado para esta carteira";
+  return `1 em ${Math.round(1 / value).toLocaleString("pt-BR")}`;
+};
+
+const formatOptionalOdds = (value) => (
+  value === null || value === undefined
+    ? "Não certificado para esta carteira"
+    : formatOdds(value)
 );
 
 const validationFieldLabels = Object.freeze({
@@ -349,12 +382,12 @@ form.addEventListener("submit", async (event) => {
     document.querySelector("#games").textContent = plan.games;
     document.querySelector("#used-seed").textContent = context.seed;
     document.querySelector("#jackpot-probability").textContent =
-      formatProbability(plan.jackpot_probability);
+      formatOdds(plan.jackpot_probability);
     document.querySelector("#any-prize-probability").textContent = isMegaSena
-      ? formatOptionalProbability(plan.prize_risk?.any_prize_probability)
+      ? formatOptionalOdds(plan.prize_risk?.any_prize_probability)
       : "Não calculada para esta modalidade";
     document.querySelector("#multiple-prizes-probability").textContent = isMegaSena
-      ? formatOptionalProbability(plan.prize_risk?.multiple_prizes_probability)
+      ? formatOptionalOdds(plan.prize_risk?.multiple_prizes_probability)
       : "Não calculada para esta modalidade";
 
     const comparisonBody = document.querySelector("#structure-comparison");
@@ -364,9 +397,9 @@ form.addEventListener("submit", async (event) => {
       String(plan.games),
       formatMoney(plan.cost_cents),
       formatMoney(plan.unspent_cents),
-      formatProbability(plan.jackpot_probability),
-      formatOptionalProbability(plan.prize_risk?.any_prize_probability),
-      formatOptionalProbability(plan.prize_risk?.multiple_prizes_probability),
+      formatOdds(plan.jackpot_probability),
+      formatOptionalOdds(plan.prize_risk?.any_prize_probability),
+      formatOptionalOdds(plan.prize_risk?.multiple_prizes_probability),
     ]);
     for (const system of payload.data.affordable_single_system_bets || []) {
       appendComparisonRow(comparisonBody, [
@@ -374,9 +407,9 @@ form.addEventListener("submit", async (event) => {
         String(system.simple_equivalents),
         formatMoney(system.cost_cents),
         formatMoney(payload.data.budget_cents - system.cost_cents),
-        formatProbability(system.jackpot_probability),
-        formatOptionalProbability(system.prize_risk?.any_prize_probability),
-        formatOptionalProbability(system.prize_risk?.multiple_prizes_probability),
+        formatOdds(system.jackpot_probability),
+        formatOptionalOdds(system.prize_risk?.any_prize_probability),
+        formatOptionalOdds(system.prize_risk?.multiple_prizes_probability),
       ]);
     }
     const comparisonEmpty = document.querySelector("#comparison-empty");
@@ -398,10 +431,20 @@ form.addEventListener("submit", async (event) => {
       });
       const item = document.createElement("li");
       item.className = "game-card";
-      item.textContent = numbers.map((number) => String(number).padStart(2, "0")).join(" · ");
+      const ballRow = document.createElement("div");
+      ballRow.className = "ball-row";
+      numbers.forEach((number, ballIndex) => {
+        const ball = document.createElement("span");
+        ball.className = "number-ball";
+        ball.style.animationDelay = `${ballIndex * 0.06}s`;
+        ball.textContent = String(number).padStart(2, "0");
+        ballRow.append(ball);
+      });
+      item.append(ballRow);
       const luckyMonth = generatedGame.extra_selection?.lucky_month;
       if (luckyMonth) {
         const extra = document.createElement("span");
+        extra.className = "lucky-month";
         extra.textContent = `Mês de Sorte: ${luckyMonth}`;
         item.append(extra);
       }
@@ -686,6 +729,20 @@ historyForm.addEventListener("submit", async (event) => {
     const metricsBody = document.querySelector("#number-metrics");
     heatmap.replaceChildren();
     metricsBody.replaceChildren();
+
+    const rankedByFrequency = [...data.number_metrics].sort((a, b) => b.frequency - a.frequency);
+    const hotNumbers = new Set(
+      maximumFrequency > 0 ? rankedByFrequency.slice(0, 5).map((item) => item.number) : [],
+    );
+    const coldNumbers = new Set(
+      maximumFrequency > 0
+        ? [...rankedByFrequency].reverse()
+            .filter((item) => !hotNumbers.has(item.number))
+            .slice(0, 5)
+            .map((item) => item.number)
+        : [],
+    );
+
     for (const metric of data.number_metrics) {
       const intensity = maximumFrequency === 0 ? 0 : metric.frequency / maximumFrequency;
       const cell = document.createElement("span");
@@ -693,6 +750,21 @@ historyForm.addEventListener("submit", async (event) => {
       cell.style.setProperty("--intensity", intensity);
       cell.textContent = String(metric.number).padStart(2, "0");
       cell.title = `Dezena ${metric.number}: ${metric.frequency} ocorrência(s)`;
+      if (hotNumbers.has(metric.number)) {
+        cell.dataset.heat = "hot";
+        const badge = document.createElement("span");
+        badge.className = "heat-badge";
+        badge.setAttribute("aria-hidden", "true");
+        badge.textContent = "🔥";
+        cell.append(badge);
+      } else if (coldNumbers.has(metric.number)) {
+        cell.dataset.heat = "cold";
+        const badge = document.createElement("span");
+        badge.className = "heat-badge";
+        badge.setAttribute("aria-hidden", "true");
+        badge.textContent = "❄️";
+        cell.append(badge);
+      }
       heatmap.append(cell);
 
       appendComparisonRow(metricsBody, [
@@ -763,7 +835,11 @@ backtestForm.addEventListener("submit", async (event) => {
     }
 
     const data = payload.data;
-    document.querySelector("#evidence-statement").textContent = data.evidence_statement;
+    const evidenceStatement = document.querySelector("#evidence-statement");
+    evidenceStatement.textContent = data.evidence_statement;
+    evidenceStatement.dataset.evidence = /sem evid[êe]ncia/i.test(data.evidence_statement)
+      ? "none"
+      : "found";
     document.querySelector("#backtest-context").textContent =
       `${lotteryNames[lottery]} · concursos ${data.dataset.contest_from}–${data.dataset.contest_to}`;
     document.querySelector("#backtest-folds").textContent = String(data.folds.length);
