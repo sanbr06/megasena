@@ -13,6 +13,18 @@ const caixaLotteryPages = {
   quina: "https://loterias.caixa.gov.br/Paginas/Quina.aspx",
   diadesorte: "https://loterias.caixa.gov.br/Paginas/default.aspx",
 };
+
+const betaFunnelEventName = "megasena:beta-funnel";
+const emitBetaFunnelEvent = (event, lottery) => {
+  document.dispatchEvent(new CustomEvent(betaFunnelEventName, {
+    detail: {
+      schema_version: "beta-funnel/v1",
+      event,
+      lottery,
+    },
+  }));
+};
+
 let portablePortfolio = null;
 const budgetCeilingInput = document.querySelector("#budget-ceiling");
 const budgetWarning = document.querySelector("#budget-warning");
@@ -321,6 +333,7 @@ form.addEventListener("submit", async (event) => {
     }
     status.textContent = "Plano calculado com sucesso.";
     results.hidden = false;
+    emitBetaFunnelEvent("portfolio_generated", lottery);
   } catch (error) {
     status.textContent = error.message;
   }
@@ -332,6 +345,7 @@ document.querySelector("#copy-games").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(portfolioText(portablePortfolio));
     actionStatus.textContent = "Jogos e metadados copiados.";
+    emitBetaFunnelEvent("portfolio_copied", portablePortfolio.lottery);
   } catch (error) {
     actionStatus.textContent = "Não foi possível copiar automaticamente; use uma exportação.";
   }
@@ -341,12 +355,19 @@ document.querySelector("#export-txt").addEventListener("click", () => {
   if (portablePortfolio === null) return;
   downloadPortfolio(portfolioText(portablePortfolio), "txt", "text/plain");
   document.querySelector("#portfolio-action-status").textContent = "Arquivo TXT preparado.";
+  emitBetaFunnelEvent("portfolio_exported_txt", portablePortfolio.lottery);
 });
 
 document.querySelector("#export-csv").addEventListener("click", () => {
   if (portablePortfolio === null) return;
   downloadPortfolio(portfolioCsv(portablePortfolio), "csv", "text/csv");
   document.querySelector("#portfolio-action-status").textContent = "Arquivo CSV preparado.";
+  emitBetaFunnelEvent("portfolio_exported_csv", portablePortfolio.lottery);
+});
+
+document.querySelector("#caixa-handoff").addEventListener("click", () => {
+  if (portablePortfolio === null) return;
+  emitBetaFunnelEvent("official_handoff_opened", portablePortfolio.lottery);
 });
 
 const historyForm = document.querySelector("#history-form");
@@ -430,6 +451,7 @@ historyForm.addEventListener("submit", async (event) => {
     }
     historyStatus.textContent = "Histórico carregado.";
     historyResults.hidden = false;
+    emitBetaFunnelEvent("history_explored", lottery);
   } catch (error) {
     historyStatus.textContent = error.message;
   }
@@ -487,6 +509,7 @@ backtestForm.addEventListener("submit", async (event) => {
     document.querySelector("#backtest-disclaimer").textContent = data.disclaimer;
     backtestStatus.textContent = "Backtest concluído.";
     backtestResults.hidden = false;
+    emitBetaFunnelEvent("walk_forward_completed", lottery);
   } catch (error) {
     backtestStatus.textContent = error.message;
   }
