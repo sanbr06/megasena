@@ -257,6 +257,12 @@ Para até 20 jogos simples, o planner usa o gerador de pair-packing e retorna
 um certificado de ótimo global para a probabilidade de pelo menos uma
 Quadra+.
 
+O resultado também inclui `prize_risk`: probabilidade de qualquer prêmio,
+probabilidade de prêmios múltiplos e quantidades esperadas de bilhetes
+premiados por faixa. Essas métricas são exatas para apostas sistêmicas e para
+carteiras simples com certificado de eventos `4+` disjuntos. Carteiras fora
+do limite de certificação não recebem um perfil de risco presumido.
+
 Exemplo:
 
 ```bash
