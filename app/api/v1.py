@@ -10,6 +10,7 @@ api_v1 = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 _REQUEST_FIELDS = {
     "budget_cents",
     "seed",
+    "contest_number",
     "certificate_game_limit",
     "payout_scenario",
 }
@@ -142,6 +143,15 @@ def megasena_budget_plan():
     seed, error = _integer_field(payload, "seed", default=42)
     if error:
         details.append(error)
+    contest_number = None
+    if "contest_number" in payload:
+        contest_number, error = _integer_field(
+            payload,
+            "contest_number",
+            minimum=1,
+        )
+        if error:
+            details.append(error)
     certificate_limit, error = _integer_field(
         payload,
         "certificate_game_limit",
@@ -163,7 +173,13 @@ def megasena_budget_plan():
         certificate_game_limit=certificate_limit,
         payout_scenario=payout_scenario,
     )
+    data = budget_result_as_dict(result)
+    data["generation_context"] = {
+        "lottery": "megasena",
+        "contest_number": contest_number,
+        "seed": seed,
+    }
     return jsonify({
         "api_version": "v1",
-        "data": budget_result_as_dict(result),
+        "data": data,
     })

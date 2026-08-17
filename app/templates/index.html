@@ -30,6 +30,13 @@
                aria-describedby="seed-help">
         <small id="seed-help">Use o mesmo seed para reproduzir exatamente a mesma carteira.</small>
 
+        <label for="contest-number">Concurso (opcional)</label>
+        <input id="contest-number" name="contest-number" type="number" min="1" step="1"
+               aria-describedby="contest-help">
+        <small id="contest-help">
+          Apenas identifica o contexto da carteira; não influencia as combinações geradas.
+        </small>
+
         <label for="token">Token da API</label>
         <input id="token" name="token" type="password" autocomplete="off" required
                aria-describedby="token-help">
@@ -42,7 +49,7 @@
 
     <section id="results" class="panel" aria-labelledby="results-title" hidden>
       <h2 id="results-title">Plano de jogos simples</h2>
-      <p><strong>Mega-Sena · carteira analítica sem vínculo com concurso específico</strong></p>
+      <p><strong id="portfolio-context"></strong></p>
       <dl class="metrics">
         <div><dt>Orçamento usado</dt><dd id="used-budget"></dd></div>
         <div><dt>Saldo não utilizado</dt><dd id="unspent-budget"></dd></div>

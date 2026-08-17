@@ -57,6 +57,11 @@ def test_budget_plan_exposes_exact_analytics(client):
     assert response.json["api_version"] == "v1"
     data = response.json["data"]
     assert data["budget_cents"] == 4_200
+    assert data["generation_context"] == {
+        "lottery": "megasena",
+        "contest_number": None,
+        "seed": 42,
+    }
     assert data["simple_plan"]["games"] == 7
     assert data["simple_plan"]["jackpot_probability"] == pytest.approx(
         7 / comb(60, 6)
@@ -68,6 +73,21 @@ def test_budget_plan_exposes_exact_analytics(client):
         ["multiple_prizes_probability"]
         > 0
     )
+
+
+def test_budget_plan_preserves_explicit_contest_context(client):
+    response = client.post(
+        "/api/v1/megasena/budget-plan",
+        json={"budget_cents": 600, "seed": 17, "contest_number": 3000},
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    assert response.json["data"]["generation_context"] == {
+        "lottery": "megasena",
+        "contest_number": 3000,
+        "seed": 17,
+    }
 
 
 def test_budget_plan_accepts_explicit_payout_scenario(client):
@@ -94,6 +114,11 @@ def test_budget_plan_accepts_explicit_payout_scenario(client):
         ({}, "budget_cents", "required"),
         ({"budget_cents": True}, "budget_cents", "must_be_integer"),
         ({"budget_cents": -1}, "budget_cents", "must_be_at_least"),
+        (
+            {"budget_cents": 600, "contest_number": 0},
+            "contest_number",
+            "must_be_at_least",
+        ),
         ({"budget_cents": 600, "extra": 1}, "extra", "unknown_field"),
         (
             {"budget_cents": 600, "payout_scenario": {}},
