@@ -273,9 +273,11 @@ A saída inclui orçamento usado, saldo não utilizado, quantidade de jogos,
 probabilidade de Sena, probabilidade certificada de Quadra+ e perfis das
 apostas únicas com mais dezenas que cabem no mesmo orçamento.
 
-Esta versão ainda não compara multiplicidade de prêmios, valor esperado,
-rateios reais ou retorno financeiro. Esses itens pertencem à próxima camada
-do Portfolio Planner.
+Por padrão, o planner não presume rateios. Quando recebe um cenário explícito
+de pagamentos por faixa, ele também retorna valor esperado, resultado líquido,
+ROI e variância para cada aposta sistêmica acessível e para a carteira simples
+certificada. Os valores do cenário são hipóteses analíticas, não previsões de
+rateios reais.
 
 ## Prize Multiplicity and Risk
 

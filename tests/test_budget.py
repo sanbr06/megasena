@@ -9,6 +9,7 @@ from app.math_core.budget import (
     plan_megasena_budget,
     profile_megasena_system_bet,
 )
+from app.math_core.prize_multiplicity import PayoutScenario
 
 
 @pytest.mark.parametrize(
@@ -154,3 +155,41 @@ def test_uncertified_simple_plan_does_not_claim_exact_risk_profile():
     assert result.simple_plan.games == 21
     assert result.simple_plan.globally_optimal_quadra_plus is False
     assert result.simple_plan.prize_risk is None
+
+
+def test_budget_planner_integrates_explicit_payout_risk():
+    scenario = PayoutScenario(
+        sena_cents=500_000_000,
+        quina_cents=5_000_000,
+        quadra_cents=100_000,
+    )
+
+    result = plan_megasena_budget(
+        4_200,
+        seed=42,
+        payout_scenario=scenario,
+    )
+
+    simple_risk = result.simple_plan.payout_risk
+    system_risk = result.affordable_single_system_bets[-1].payout_risk
+
+    assert simple_risk is not None
+    assert system_risk is not None
+    assert (
+        simple_risk.expected_gross_payout_cents
+        == pytest.approx(system_risk.expected_gross_payout_cents)
+    )
+    assert (
+        simple_risk.payout_variance_cents_squared
+        < system_risk.payout_variance_cents_squared
+    )
+
+
+def test_budget_planner_does_not_assume_a_payout_scenario():
+    result = plan_megasena_budget(4_200)
+
+    assert result.simple_plan.payout_risk is None
+    assert all(
+        bet.payout_risk is None
+        for bet in result.affordable_single_system_bets
+    )
