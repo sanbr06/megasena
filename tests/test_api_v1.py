@@ -5,6 +5,47 @@ import pytest
 AUTH = {"Authorization": "Bearer test-token"}
 
 
+def test_lottery_catalog_exposes_versioned_product_rules(client):
+    response = client.get("/api/v1/lotteries", headers=AUTH)
+
+    assert response.status_code == 200
+    assert response.json["api_version"] == "v1"
+    lotteries = {
+        lottery["slug"]: lottery
+        for lottery in response.json["data"]["lotteries"]
+    }
+
+    assert set(lotteries) == {"megasena", "lotofacil", "quina", "diadesorte"}
+    assert lotteries["megasena"] == {
+        "slug": "megasena",
+        "name": "Mega-Sena",
+        "minimum_number": 1,
+        "maximum_number": 60,
+        "draw_size": 6,
+        "simple_game_cost_cents": 600,
+        "pricing_version": "caixa-2026-08-17",
+        "extra_selection": None,
+    }
+    assert lotteries["lotofacil"]["simple_game_cost_cents"] == 350
+    assert lotteries["quina"]["simple_game_cost_cents"] == 300
+
+    lucky_month = lotteries["diadesorte"]["extra_selection"]
+    assert lotteries["diadesorte"]["simple_game_cost_cents"] == 250
+    assert lucky_month["key"] == "lucky_month"
+    assert lucky_month["label"] == "Mês de Sorte"
+    assert lucky_month["quantity"] == 1
+    assert len(lucky_month["options"]) == 12
+    assert lucky_month["options"][0] == "janeiro"
+    assert lucky_month["options"][-1] == "dezembro"
+
+
+def test_lottery_catalog_preserves_bearer_authentication(client):
+    response = client.get("/api/v1/lotteries")
+
+    assert response.status_code == 401
+    assert response.json == {"error": "token_required"}
+
+
 def test_budget_plan_exposes_exact_analytics(client):
     response = client.post(
         "/api/v1/megasena/budget-plan",
