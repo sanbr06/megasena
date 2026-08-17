@@ -30,6 +30,11 @@ small { color: #596660; }
 .game-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .65rem; padding: 0; counter-reset: games; }
 .game-card { display: flex; align-items: center; min-height: 2.5rem; border: 1px solid #c7d5cf; border-radius: .65rem; padding: .75rem; font-variant-numeric: tabular-nums; font-weight: 700; list-style: none; }
 .game-card::before { counter-increment: games; content: "Jogo " counter(games, decimal-leading-zero); color: #176b4f; font-size: .75rem; margin-right: .8rem; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { padding: .7rem; border-bottom: 1px solid #d7e0dc; text-align: left; white-space: nowrap; }
+th { color: #45534e; }
+tbody tr:first-child { background: #f1f8f5; }
 
 @media (max-width: 35rem) {
   main { margin: 1.5rem auto; }

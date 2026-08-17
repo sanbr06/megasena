@@ -18,6 +18,16 @@ const formatOptionalProbability = (value) => (
     : formatProbability(value)
 );
 
+const appendComparisonRow = (body, values) => {
+  const row = document.createElement("tr");
+  for (const value of values) {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.append(cell);
+  }
+  body.append(row);
+};
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   results.hidden = true;
@@ -53,6 +63,35 @@ form.addEventListener("submit", async (event) => {
       formatOptionalProbability(plan.prize_risk?.any_prize_probability);
     document.querySelector("#multiple-prizes-probability").textContent =
       formatOptionalProbability(plan.prize_risk?.multiple_prizes_probability);
+
+    const comparisonBody = document.querySelector("#structure-comparison");
+    comparisonBody.replaceChildren();
+    appendComparisonRow(comparisonBody, [
+      "Jogos simples diversificados",
+      String(plan.games),
+      formatMoney(plan.cost_cents),
+      formatMoney(plan.unspent_cents),
+      formatProbability(plan.jackpot_probability),
+      formatOptionalProbability(plan.prize_risk?.any_prize_probability),
+      formatOptionalProbability(plan.prize_risk?.multiple_prizes_probability),
+    ]);
+    for (const system of payload.data.affordable_single_system_bets || []) {
+      appendComparisonRow(comparisonBody, [
+        `Aposta sistêmica · ${system.marked_numbers} dezenas`,
+        String(system.simple_equivalents),
+        formatMoney(system.cost_cents),
+        formatMoney(payload.data.budget_cents - system.cost_cents),
+        formatProbability(system.jackpot_probability),
+        formatOptionalProbability(system.prize_risk?.any_prize_probability),
+        formatOptionalProbability(system.prize_risk?.multiple_prizes_probability),
+      ]);
+    }
+    const comparisonEmpty = document.querySelector("#comparison-empty");
+    const hasSystemBet = payload.data.affordable_single_system_bets?.length > 0;
+    comparisonEmpty.hidden = hasSystemBet;
+    comparisonEmpty.textContent = hasSystemBet
+      ? ""
+      : "Nenhuma aposta sistêmica cabe no orçamento informado.";
 
     const gameList = document.querySelector("#generated-games");
     gameList.replaceChildren();
