@@ -150,3 +150,27 @@ def test_saved_portfolio_check_matches_numbers_and_lucky_month(client, app):
         "message": "Jogo 01: 7 acertos",
     }]
     assert data["check"]["payouts"] is None
+
+
+def test_saved_portfolio_list_returns_most_recent_first(client):
+    first = client.post("/api/v1/portfolios", json=_portfolio(), headers=AUTH)
+    second = client.post(
+        "/api/v1/portfolios",
+        json=_portfolio(contest=1101),
+        headers=AUTH,
+    )
+
+    response = client.get("/api/v1/portfolios", headers=AUTH)
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json["data"]] == [2, 1]
+    assert [item["contest"] for item in response.json["data"]] == [1101, 1100]
+
+
+def test_saved_portfolio_list_requires_authentication(client):
+    response = client.get("/api/v1/portfolios")
+
+    assert response.status_code == 401
+    assert response.json == {"error": "token_required"}

@@ -85,6 +85,15 @@ class PortfolioRepository:
             "created_at": row["created_at"],
         }
 
+    def list_recent(self, limit=50):
+        limit = max(1, min(int(limit), 100))
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id FROM saved_portfolios ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self.get(row["id"]) for row in rows]
+
     def update_status(self, portfolio_id, status):
         with self._connect() as conn:
             conn.execute(

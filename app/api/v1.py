@@ -623,6 +623,16 @@ def walk_forward_backtest(lottery):
     return jsonify({"api_version": "v1", "data": data})
 
 
+@api_v1.get("/portfolios")
+@require_token
+def list_portfolios():
+    repository = current_app.extensions["portfolio_repository"]
+    return jsonify({
+        "api_version": "v1",
+        "data": repository.list_recent(),
+    })
+
+
 @api_v1.post("/portfolios")
 @require_token
 def save_portfolio():
