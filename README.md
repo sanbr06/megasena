@@ -144,6 +144,12 @@ O relatório compara:
 - distribuição Monte Carlo;
 - probabilidade simulada de atingir um limiar de acertos.
 
+A saída é um registro de experimento `strategy-comparison/v1`. Ela inclui um
+identificador determinístico, versões e parâmetros das estratégias, seed,
+versão e intervalo dos sorteios sintéticos, métricas e versão do runtime. O
+timestamp de execução não participa do identificador, portanto duas execuções
+com as mesmas entradas e resultados podem ser reconhecidas como equivalentes.
+
 Com a mesma quantidade de jogos simples únicos, a probabilidade matemática
 de Sena permanece igual. O objetivo da estratégia de baixa redundância é
 melhorar a estrutura da carteira e a cobertura de faixas inferiores, não

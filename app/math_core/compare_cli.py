@@ -1,9 +1,12 @@
 import argparse
 import json
-from dataclasses import asdict
 
 from app.lotteries import LOTTERIES
 from app.math_core.comparison import compare_strategies
+from app.math_core.experiment_records import (
+    StrategyDescriptor,
+    build_strategy_experiment_record,
+)
 from app.math_core.portfolio import generate_random_portfolio
 from app.math_core.strategies import (
     generate_low_redundancy_portfolio,
@@ -62,7 +65,24 @@ def main():
         chunk_size=args.chunk_size,
     )
 
-    output = asdict(result)
+    output = build_strategy_experiment_record(
+        result,
+        seed=args.seed,
+        baseline=StrategyDescriptor(
+            name="random_baseline",
+            version="random-portfolio/v1",
+            parameters={"games": args.games},
+        ),
+        challenger=StrategyDescriptor(
+            name="low_redundancy",
+            version="low-redundancy/v1",
+            parameters={
+                "games": args.games,
+                "subset_size": args.subset_size,
+                "candidate_pool_size": args.candidate_pool_size,
+            },
+        ),
+    )
     output["interpretation"] = {
         "coverage_delta_positive_is_better": True,
         "overlap_delta_negative_is_better": True,
