@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from app.core.security import require_token
 from app.math_core.budget import budget_result_as_dict, plan_megasena_budget
@@ -13,6 +13,30 @@ _REQUEST_FIELDS = {
     "payout_scenario",
 }
 _PAYOUT_FIELDS = {"sena_cents", "quina_cents", "quadra_cents"}
+
+
+@api_v1.get("/ready")
+def readiness():
+    repository = current_app.extensions["result_repository"]
+    if not repository.is_ready():
+        return jsonify({
+            "api_version": "v1",
+            "error": {
+                "code": "service_unavailable",
+                "message": "The service is not ready.",
+                "details": [
+                    {"component": "database", "status": "unavailable"},
+                ],
+            },
+        }), 503
+
+    return jsonify({
+        "api_version": "v1",
+        "data": {
+            "status": "ready",
+            "checks": {"database": "available"},
+        },
+    })
 
 
 def _validation_error(details):
