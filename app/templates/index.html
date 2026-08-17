@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#123c2f">
-  <title>MegaSena Analytics</title>
+  <title>Joga Certo</title>
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
@@ -12,152 +12,224 @@
   <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
   <main id="main-content">
     <header>
-      <p class="eyebrow">MegaSena Analytics</p>
-      <h1>Planeje uma carteira por orçamento</h1>
+      <div class="brand-row">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="white" stroke="none"/></svg>
+        </div>
+        <span class="brand-name">Joga Certo</span>
+      </div>
+      <h1>Seus números, do seu jeito.</h1>
       <p class="lead">
-        Compare cobertura e risco com combinatória exata. A escolha das dezenas não prevê
-        sorteios nem melhora a chance de Sena de uma combinação individual.
+        Organize seus jogos de loteria dentro do orçamento que você definir. Isso não prevê
+        sorteios nem aumenta a chance de ganhar de um jogo — só ajuda a organizar suas apostas.
       </p>
       <aside class="responsible-play" aria-label="Aviso de jogo responsável">
-        <strong>18+ · Aposta não é investimento.</strong>
-        <span>Defina um limite que caiba no seu orçamento. Não tente recuperar perdas.</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/></svg>
+        <span><strong>18+ · Aposta não é investimento.</strong> Defina um limite que caiba no seu orçamento. Não tente recuperar perdas.</span>
       </aside>
     </header>
 
     <section class="panel" aria-labelledby="planner-title">
-      <h2 id="planner-title">Orçamento</h2>
+      <h2 id="planner-title">Monte sua carteira</h2>
       <form id="budget-form">
-        <label for="lottery">Modalidade</label>
-        <select id="lottery" name="lottery">
-          <option value="megasena">Mega-Sena</option>
-          <option value="lotofacil">Lotofácil</option>
-          <option value="quina">Quina</option>
-          <option value="diadesorte">Dia de Sorte</option>
-        </select>
+        <span class="field-label" id="lottery-label">Escolha seu jogo</span>
+        <div class="lottery-grid" role="radiogroup" aria-labelledby="lottery-label">
+          <div class="lottery-option">
+            <input type="radio" name="lottery-choice" id="lottery-megasena" value="megasena" checked>
+            <label for="lottery-megasena" class="lottery-card" data-lottery="megasena">
+              <span class="lottery-badge">M</span>
+              <span class="lottery-card-name">Mega-Sena</span>
+              <span class="lottery-card-desc">6 números · prêmio pode passar de R$100 milhões</span>
+              <span class="lottery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            </label>
+          </div>
+          <div class="lottery-option">
+            <input type="radio" name="lottery-choice" id="lottery-lotofacil" value="lotofacil">
+            <label for="lottery-lotofacil" class="lottery-card" data-lottery="lotofacil">
+              <span class="lottery-badge">L</span>
+              <span class="lottery-card-name">Lotofácil</span>
+              <span class="lottery-card-desc">15 números · mais chances de ganhar algo</span>
+              <span class="lottery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            </label>
+          </div>
+          <div class="lottery-option">
+            <input type="radio" name="lottery-choice" id="lottery-quina" value="quina">
+            <label for="lottery-quina" class="lottery-card" data-lottery="quina">
+              <span class="lottery-badge">Q</span>
+              <span class="lottery-card-name">Quina</span>
+              <span class="lottery-card-desc">5 números · sorteios todo dia útil</span>
+              <span class="lottery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            </label>
+          </div>
+          <div class="lottery-option">
+            <input type="radio" name="lottery-choice" id="lottery-diadesorte" value="diadesorte">
+            <label for="lottery-diadesorte" class="lottery-card" data-lottery="diadesorte">
+              <span class="lottery-badge">D</span>
+              <span class="lottery-card-name">Dia de Sorte</span>
+              <span class="lottery-card-desc">7 números + mês da sorte</span>
+              <span class="lottery-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            </label>
+          </div>
+        </div>
+        <input type="hidden" id="lottery" name="lottery" value="megasena">
 
-        <label for="budget">Valor disponível (R$)</label>
+        <label for="budget">Quanto você quer investir? (R$)</label>
+        <div class="chip-row" role="group" aria-label="Valores rápidos">
+          <button type="button" class="chip" data-amount="20">R$ 20</button>
+          <button type="button" class="chip" data-amount="50">R$ 50</button>
+          <button type="button" class="chip" data-amount="120" aria-pressed="true">R$ 120</button>
+        </div>
         <input id="budget" name="budget" type="number" min="0" step="0.01" value="120.00" required>
+        <small>Prefere outro valor? Ajuste o campo acima.</small>
 
-        <label for="budget-ceiling">Meu teto pessoal por carteira (R$, opcional)</label>
+        <label for="budget-ceiling">Meu limite pessoal por carteira (R$, opcional)</label>
         <input id="budget-ceiling" name="budget-ceiling" type="number" min="0.01" step="0.01"
                aria-describedby="budget-ceiling-help">
         <small id="budget-ceiling-help">
-          Salvo somente neste navegador. Pedidos acima do teto não serão gerados.
+          Fica salvo só neste navegador. Não geramos carteiras acima desse valor.
         </small>
         <p id="budget-warning" class="budget-warning" role="alert" tabindex="-1" hidden></p>
 
-        <label for="seed">Seed de geração</label>
-        <input id="seed" name="seed" type="number" step="1" value="42" required
-               aria-describedby="seed-help">
-        <small id="seed-help">Use o mesmo seed para reproduzir exatamente a mesma carteira.</small>
-
-        <label for="contest-number">Concurso (opcional)</label>
-        <input id="contest-number" name="contest-number" type="number" min="1" step="1"
-               aria-describedby="contest-help">
-        <small id="contest-help">
-          Apenas identifica o contexto da carteira; não influencia as combinações geradas.
-        </small>
-
-        <fieldset>
-          <legend>Restrições experimentais de composição (opcionais)</legend>
-          <div class="filter-grid">
-            <div>
-              <label for="allowed-sum-min">Soma mínima</label>
-              <input id="allowed-sum-min" type="number" min="0" step="1">
-            </div>
-            <div>
-              <label for="allowed-sum-max">Soma máxima</label>
-              <input id="allowed-sum-max" type="number" min="0" step="1">
-            </div>
-          </div>
-          <small>
-            Filtrar soma, quantidade de ímpares, repetição ou sobreposição apenas define a estrutura da carteira.
-            Não prevê resultados nem aumenta a chance futura; avalie estratégias somente
-            contra o baseline uniforme.
-          </small>
-          <div class="filter-grid">
-            <div>
-              <label for="allowed-odd-min">Mínimo de ímpares</label>
-              <input id="allowed-odd-min" type="number" min="0" step="1">
-            </div>
-            <div>
-              <label for="allowed-odd-max">Máximo de ímpares</label>
-              <input id="allowed-odd-max" type="number" min="0" step="1">
-            </div>
-          </div>
-          <div class="filter-grid">
-            <div>
-              <label for="allowed-repeat-min">Mínimo repetido do concurso anterior</label>
-              <input id="allowed-repeat-min" type="number" min="0" step="1">
-            </div>
-            <div>
-              <label for="allowed-repeat-max">Máximo repetido do concurso anterior</label>
-              <input id="allowed-repeat-max" type="number" min="0" step="1">
-            </div>
-          </div>
-          <small>
-            Esta restrição exige o número do concurso e compara cada jogo somente com o
-            resultado oficial armazenado do concurso imediatamente anterior.
-          </small>
+        <details class="custom-numbers">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
+            Personalizar meus números (opcional)
+          </summary>
           <div>
-            <label for="allowed-max-overlap">Sobreposição máxima entre dois jogos</label>
-            <input id="allowed-max-overlap" type="number" min="0" step="1">
-            <small>
-              Limita quantas dezenas dois jogos da mesma carteira podem compartilhar.
-              É uma restrição estrutural, não uma previsão.
-            </small>
+            <p class="note">
+              Isso só organiza a estrutura da carteira. Não prevê resultados nem aumenta
+              a chance futura; avalie sempre contra o baseline uniforme no laboratório histórico.
+            </p>
+            <fieldset>
+              <legend>Soma e paridade das dezenas</legend>
+              <div class="filter-grid">
+                <div>
+                  <label for="allowed-sum-min">Soma mínima</label>
+                  <input id="allowed-sum-min" type="number" min="0" step="1">
+                </div>
+                <div>
+                  <label for="allowed-sum-max">Soma máxima</label>
+                  <input id="allowed-sum-max" type="number" min="0" step="1">
+                </div>
+                <div>
+                  <label for="allowed-odd-min">Mínimo de ímpares</label>
+                  <input id="allowed-odd-min" type="number" min="0" step="1">
+                </div>
+                <div>
+                  <label for="allowed-odd-max">Máximo de ímpares</label>
+                  <input id="allowed-odd-max" type="number" min="0" step="1">
+                </div>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Repetição do concurso anterior</legend>
+              <div class="filter-grid">
+                <div>
+                  <label for="allowed-repeat-min">Mínimo repetido</label>
+                  <input id="allowed-repeat-min" type="number" min="0" step="1">
+                </div>
+                <div>
+                  <label for="allowed-repeat-max">Máximo repetido</label>
+                  <input id="allowed-repeat-max" type="number" min="0" step="1">
+                </div>
+              </div>
+              <small>
+                Para usar isso, informe o número do concurso em "Modo avançado" abaixo — comparamos
+                com o resultado oficial do concurso imediatamente anterior.
+              </small>
+            </fieldset>
+            <fieldset>
+              <legend>Sobreposição entre jogos</legend>
+              <div>
+                <label for="allowed-max-overlap">Sobreposição máxima entre dois jogos</label>
+                <input id="allowed-max-overlap" type="number" min="0" step="1">
+                <small>
+                  Limita quantas dezenas dois jogos da mesma carteira podem compartilhar.
+                  É uma restrição estrutural, não uma previsão.
+                </small>
+              </div>
+            </fieldset>
           </div>
-        </fieldset>
+        </details>
 
-        <label for="token">Token da API</label>
-        <input id="token" name="token" type="password" autocomplete="off" required
-               aria-describedby="token-help">
-        <small id="token-help">Usado somente nesta requisição; não é armazenado pelo navegador.</small>
+        <details class="advanced-toggle">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg>
+            Modo avançado (seed, concurso, token da API)
+          </summary>
+          <div>
+            <label for="seed">Seed de geração</label>
+            <input id="seed" name="seed" type="number" step="1" value="42" required
+                   aria-describedby="seed-help">
+            <small id="seed-help">Use o mesmo seed para repetir exatamente a mesma carteira.</small>
 
-        <button type="submit">Calcular plano</button>
+            <label for="contest-number">Concurso (opcional)</label>
+            <input id="contest-number" name="contest-number" type="number" min="1" step="1"
+                   aria-describedby="contest-help">
+            <small id="contest-help">
+              Apenas identifica o contexto da carteira; não influencia as combinações geradas.
+            </small>
+
+            <label for="token">Token da API</label>
+            <input id="token" name="token" type="password" autocomplete="off" required
+                   aria-describedby="token-help">
+            <small id="token-help">Usado só nesta requisição; seu navegador não guarda esse valor.</small>
+          </div>
+        </details>
+
+        <button type="submit">Gerar meus números</button>
       </form>
       <p id="status" role="status" aria-live="polite"></p>
     </section>
 
     <section id="results" class="panel" aria-labelledby="results-title" hidden>
-      <h2 id="results-title">Plano de jogos simples</h2>
+      <h2 id="results-title">Sua carteira</h2>
       <p><strong id="portfolio-context"></strong></p>
-      <dl class="metrics">
-        <div><dt>Orçamento usado</dt><dd id="used-budget"></dd></div>
-        <div><dt>Saldo não utilizado</dt><dd id="unspent-budget"></dd></div>
-        <div><dt>Jogos simples</dt><dd id="games"></dd></div>
-        <div><dt>Seed</dt><dd id="used-seed"></dd></div>
-        <div><dt>Probabilidade de Sena</dt><dd id="jackpot-probability"></dd></div>
-        <div><dt>Probabilidade de qualquer prêmio</dt><dd id="any-prize-probability"></dd></div>
-        <div><dt>Probabilidade de prêmios múltiplos</dt><dd id="multiple-prizes-probability"></dd></div>
+      <dl class="metrics headline">
+        <div><dt>Você vai gastar</dt><dd id="used-budget"></dd></div>
+        <div><dt>Sobra do orçamento</dt><dd id="unspent-budget"></dd></div>
+        <div><dt>Jogos gerados</dt><dd id="games"></dd></div>
+        <div><dt>Chance de ganhar o prêmio principal</dt><dd id="jackpot-probability"></dd></div>
       </dl>
+      <details class="advanced-toggle">
+        <summary>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 18l6-6-6-6"/></svg>
+          Ver detalhes técnicos
+        </summary>
+        <div>
+          <dl class="metrics">
+            <div><dt>Seed usado</dt><dd id="used-seed"></dd></div>
+            <div><dt>Chance de qualquer prêmio</dt><dd id="any-prize-probability"></dd></div>
+            <div><dt>Chance de prêmios múltiplos</dt><dd id="multiple-prizes-probability"></dd></div>
+          </dl>
+        </div>
+      </details>
       <p id="portfolio-explanation" class="note"></p>
       <p id="constraint-disclaimer" class="note" hidden></p>
-      <h3 id="generated-games-title">Combinações geradas</h3>
+      <h3 id="generated-games-title">Seus números</h3>
       <ol id="generated-games" class="game-list" aria-label="Jogos gerados"></ol>
       <section id="portfolio-actions" aria-labelledby="portfolio-actions-title" hidden>
-        <h3 id="portfolio-actions-title">Copiar, exportar ou continuar na CAIXA</h3>
+        <h3 id="portfolio-actions-title">O que fazer agora</h3>
         <div class="action-grid">
-          <button id="copy-games" type="button">Copiar jogos</button>
+          <button id="copy-games" type="button">Copiar</button>
           <button id="export-txt" type="button">Exportar TXT</button>
           <button id="export-csv" type="button">Exportar CSV</button>
-          <button id="save-portfolio" type="button">Salvar carteira</button>
+          <button id="save-portfolio" type="button">Salvar</button>
           <a id="caixa-handoff" class="button-link" href="https://loterias.caixa.gov.br/"
-             target="_blank" rel="noopener noreferrer">Abrir página oficial da CAIXA</a>
+             target="_blank" rel="noopener noreferrer">Ir para a CAIXA</a>
         </div>
         <p id="portfolio-action-status" role="status" aria-live="polite"></p>
         <p class="note">
-          Esta carteira é uma simulação analítica. Copiar, exportar ou abrir a página oficial
-          não registra uma aposta. Se decidir apostar, confira e registre os jogos somente nos
-          canais oficiais da CAIXA.
+          Isso organiza seus números — ainda não é uma aposta registrada. Se decidir apostar,
+          confira e registre os jogos somente nos canais oficiais da CAIXA.
         </p>
       </section>
       <section id="system-comparison" aria-labelledby="comparison-title">
-        <h3 id="comparison-title">Simples diversificados × aposta sistêmica</h3>
+        <h3 id="comparison-title">Simples diversificados × aposta em grupo</h3>
         <p class="note">
-          A tabela compara estruturas que cabem no mesmo orçamento. Ela não recomenda
-          uma delas: a mesma quantidade de combinações simples distintas tem a mesma
-          probabilidade de Sena, mas o agrupamento altera cobertura e concentração de prêmios.
+          Compara estruturas que cabem no mesmo orçamento — sem indicar qual é "melhor": a mesma
+          quantidade de combinações simples tem a mesma chance de Sena, mas o agrupamento muda
+          como os prêmios se distribuem.
         </p>
         <div class="table-scroll" tabindex="0" aria-label="Comparação de estruturas de aposta">
           <table>
@@ -167,7 +239,7 @@
                 <th scope="col">Equivalentes simples</th>
                 <th scope="col">Custo</th>
                 <th scope="col">Saldo</th>
-                <th scope="col">Probabilidade de Sena</th>
+                <th scope="col">Chance de Sena</th>
                 <th scope="col">Qualquer prêmio</th>
                 <th scope="col">Prêmios múltiplos</th>
               </tr>
@@ -178,19 +250,16 @@
         <p id="comparison-empty" class="note" hidden></p>
       </section>
       <p class="note">
-        Probabilidade de prêmio, valor esperado, variância e probabilidade de Sena são
-        medidas diferentes. Valores de rateio, quando usados, são cenários — não previsões.
-        Métricas que dependem de um certificado exato são identificadas quando a carteira
-        está fora do limite certificado.
+        Chance de prêmio, valor esperado e chance de Sena são medidas diferentes. Valores de
+        rateio, quando usados, são cenários — não previsões.
       </p>
     </section>
 
     <section class="panel" aria-labelledby="saved-portfolios-title">
       <h2 id="saved-portfolios-title">Minhas carteiras salvas</h2>
       <p class="note">
-        As carteiras são persistidas nesta instalação local e continuam separadas dos
-        resultados oficiais. Salvar uma carteira não registra uma aposta na CAIXA.
-        Para acompanhar um resultado, a carteira precisa estar associada a um concurso.
+        Ficam guardadas nesta instalação, separadas dos resultados oficiais. Salvar uma carteira
+        não registra uma aposta na CAIXA.
       </p>
       <button id="refresh-saved-portfolios" type="button">Atualizar carteiras salvas</button>
       <p id="saved-portfolios-status" role="status" aria-live="polite"></p>
@@ -216,17 +285,17 @@
         <p id="saved-portfolio-check-context"></p>
         <ul id="saved-portfolio-events"></ul>
         <p class="note">
-          A conferência usa o resultado oficial armazenado. Valores de rateio não são
-          inferidos; confirme qualquer premiação no comprovante e nos canais oficiais.
+          A conferência usa o resultado oficial armazenado. Valores de rateio não são inferidos;
+          confirme qualquer premiação no comprovante e nos canais oficiais.
         </p>
       </div>
     </section>
 
     <section class="panel" aria-labelledby="history-title">
-      <h2 id="history-title">Explorador histórico</h2>
+      <h2 id="history-title">Números quentes e frios</h2>
       <p class="note">
-        Explore frequência e recência nos resultados oficiais armazenados. Padrões
-        históricos são descritivos e não indicam quais dezenas serão sorteadas.
+        Veja quais dezenas mais e menos apareceram nos resultados oficiais armazenados.
+        Padrões históricos são descritivos e não indicam quais dezenas serão sorteadas.
       </p>
       <form id="history-form">
         <label for="history-lottery">Modalidade</label>
@@ -261,6 +330,11 @@
 
       <div id="history-results" hidden>
         <p><strong id="history-context"></strong></p>
+        <div class="heatmap-legend">
+          <span><i class="dot-hot"></i>🔥 Quente</span>
+          <span><i class="dot-cold"></i>❄️ Frio</span>
+          <span><i class="dot-neutral"></i>Neutro</span>
+        </div>
         <div id="frequency-heatmap" class="heatmap" aria-hidden="true"></div>
         <div class="table-scroll" tabindex="0" aria-label="Frequência e recência por dezena">
           <table>
@@ -277,9 +351,8 @@
         </div>
         <h3>Tendências por concurso</h3>
         <p class="note">
-          As linhas mostram a evolução descritiva de soma, dezenas ímpares e repetidas
-          em relação ao concurso anterior dentro do recorte. Cada série usa sua própria
-          escala; os valores exatos estão na tabela seguinte.
+          Evolução descritiva de soma, ímpares e repetidas em relação ao concurso anterior dentro
+          do recorte. Cada série usa sua própria escala; os valores exatos estão na tabela abaixo.
         </p>
         <div id="draw-trends" class="trend-chart" aria-hidden="true"></div>
         <div class="table-scroll" tabindex="0" aria-label="Tendências históricas por concurso">
@@ -306,9 +379,9 @@
     <section class="panel" aria-labelledby="backtest-title">
       <h2 id="backtest-title">Laboratório histórico</h2>
       <p class="note">
-        Compare, concurso a concurso, uma regra transparente baseada apenas nas
-        frequências anteriores com um jogo uniforme aleatório de baseline. O teste é
-        descritivo, não usa dados futuros e não prevê o próximo sorteio.
+        Compara, concurso a concurso, uma regra baseada nas frequências anteriores com um jogo
+        aleatório de referência. O teste é descritivo, não usa dados futuros e não prevê o
+        próximo sorteio.
       </p>
       <form id="backtest-form">
         <label for="backtest-lottery">Modalidade</label>
@@ -329,11 +402,11 @@
             <input id="backtest-threshold" type="number" min="1" step="1" value="4" required>
           </div>
           <div>
-            <label for="backtest-seed">Seed do baseline uniforme</label>
+            <label for="backtest-seed">Seed do baseline</label>
             <input id="backtest-seed" type="number" step="1" value="42" required>
           </div>
         </div>
-        <button type="submit">Executar backtest walk-forward</button>
+        <button type="submit">Executar backtest</button>
       </form>
       <p id="backtest-status" role="status" aria-live="polite"></p>
 
@@ -341,11 +414,11 @@
         <p id="evidence-statement" class="evidence-statement"></p>
         <p><strong id="backtest-context"></strong></p>
         <dl class="metrics">
-          <div><dt>Folds fora da amostra</dt><dd id="backtest-folds"></dd></div>
+          <div><dt>Testes fora da amostra</dt><dd id="backtest-folds"></dd></div>
           <div><dt>Sucesso da regra histórica</dt><dd id="challenger-rate"></dd></div>
           <div><dt>Sucesso do baseline uniforme</dt><dd id="baseline-rate"></dd></div>
           <div><dt>Diferença observada</dt><dd id="rate-difference"></dd></div>
-          <div><dt>Valor-p pareado unilateral</dt><dd id="paired-p-value"></dd></div>
+          <div><dt>Valor-p pareado</dt><dd id="paired-p-value"></dd></div>
         </dl>
         <p id="backtest-strategies" class="note"></p>
         <p id="backtest-disclaimer" class="note"></p>
@@ -355,10 +428,9 @@
     <footer class="panel legal-drafts" aria-labelledby="legal-title">
       <h2 id="legal-title">Uso responsável e versão beta</h2>
       <p>
-        Esta aplicação oferece análise, simulação e organização de carteiras. Ela não
-        registra apostas, não recebe pagamentos e não garante prêmios. A participação em
-        loterias é permitida apenas para maiores de 18 anos e deve ocorrer nos canais
-        oficiais da CAIXA.
+        Este app oferece análise, simulação e organização de carteiras. Ele não registra apostas,
+        não recebe pagamentos e não garante prêmios. A participação em loterias é permitida
+        apenas para maiores de 18 anos e deve ocorrer nos canais oficiais da CAIXA.
       </p>
       <details>
         <summary>Termos de uso — rascunho sujeito a revisão jurídica</summary>
@@ -371,7 +443,7 @@
       <details>
         <summary>Privacidade — rascunho sujeito a revisão jurídica</summary>
         <p>
-          Conteúdo provisório para beta: o teto pessoal fica no armazenamento local do
+          Conteúdo provisório para beta: o limite pessoal fica no armazenamento local do
           navegador e pode ser removido ao apagar os dados do site. O token da API permanece
           somente em memória durante o uso da página. Revisão jurídica é obrigatória antes
           de lançamento público.
