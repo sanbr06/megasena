@@ -40,6 +40,14 @@ th { color: #45534e; }
 tbody tr:first-child { background: #f1f8f5; }
 .heatmap { display: grid; grid-template-columns: repeat(auto-fit, minmax(2.6rem, 1fr)); gap: .35rem; margin: 1rem 0; }
 .heatmap-cell { display: grid; place-items: center; min-height: 2.6rem; border: 1px solid #8fb6a7; border-radius: .4rem; background: color-mix(in srgb, #176b4f calc(var(--intensity) * 85%), white); color: color-mix(in srgb, white calc(var(--intensity) * 120%), #17231f); font-variant-numeric: tabular-nums; font-weight: 700; }
+.trend-chart { margin: 1rem 0; overflow: hidden; }
+.trend-chart svg { display: block; width: 100%; min-height: 12rem; }
+.trend-grid { stroke: #d7e0dc; stroke-width: 1; }
+.trend-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.trend-line.trend-sum { stroke: #176b4f; }
+.trend-line.trend-odd { stroke: #b05b17; }
+.trend-line.trend-repeated { stroke: #6750a4; }
+.trend-label { fill: #45534e; font-size: 11px; }
 
 @media (max-width: 35rem) {
   main { margin: 1.5rem auto; }

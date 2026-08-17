@@ -34,6 +34,66 @@ const appendComparisonRow = (body, values) => {
   body.append(row);
 };
 
+const renderTrendChart = (container, draws) => {
+  container.replaceChildren();
+  if (draws.length === 0) return;
+
+  const namespace = "http://www.w3.org/2000/svg";
+  const width = 720;
+  const height = 210;
+  const padding = {left: 20, right: 20, top: 30, bottom: 20};
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const svg = document.createElementNS(namespace, "svg");
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("role", "img");
+
+  for (const fraction of [0, 0.5, 1]) {
+    const line = document.createElementNS(namespace, "line");
+    const y = padding.top + (plotHeight * fraction);
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("class", "trend-grid");
+    svg.append(line);
+  }
+
+  const series = [
+    {label: "Soma", key: "sum", className: "trend-sum"},
+    {label: "Ímpares", key: "odd_count", className: "trend-odd"},
+    {label: "Repetidas", key: "repeated_from_previous", className: "trend-repeated"},
+  ];
+  series.forEach((definition, seriesIndex) => {
+    const values = draws.map((draw) => draw[definition.key]).filter((value) => value !== null);
+    if (values.length === 0) return;
+    const minimum = Math.min(...values);
+    const maximum = Math.max(...values);
+    const span = maximum - minimum;
+    const points = draws.flatMap((draw, index) => {
+      const value = draw[definition.key];
+      if (value === null) return [];
+      const x = draws.length === 1
+        ? width / 2
+        : padding.left + ((index / (draws.length - 1)) * plotWidth);
+      const normalized = span === 0 ? 0.5 : (value - minimum) / span;
+      return [`${x},${padding.top + ((1 - normalized) * plotHeight)}`];
+    });
+    const polyline = document.createElementNS(namespace, "polyline");
+    polyline.setAttribute("points", points.join(" "));
+    polyline.setAttribute("class", `trend-line ${definition.className}`);
+    svg.append(polyline);
+
+    const label = document.createElementNS(namespace, "text");
+    label.setAttribute("x", padding.left + (seriesIndex * 120));
+    label.setAttribute("y", 16);
+    label.setAttribute("class", `trend-label ${definition.className}`);
+    label.textContent = `${definition.label} (${minimum}–${maximum})`;
+    svg.append(label);
+  });
+  container.append(svg);
+};
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   results.hidden = true;
@@ -210,6 +270,25 @@ historyForm.addEventListener("submit", async (event) => {
         metric.draws_since_last_seen === null
           ? "Sem ocorrência no recorte"
           : String(metric.draws_since_last_seen),
+      ]);
+    }
+    renderTrendChart(document.querySelector("#draw-trends"), data.draws);
+    const drawMetricsBody = document.querySelector("#draw-metrics");
+    drawMetricsBody.replaceChildren();
+    for (const draw of data.draws) {
+      const bands = draw.band_counts
+        .map((band) => `${band.start}–${band.end}: ${band.count}`)
+        .join("; ");
+      appendComparisonRow(drawMetricsBody, [
+        String(draw.contest),
+        draw.draw_date || "Data indisponível",
+        String(draw.sum),
+        String(draw.odd_count),
+        String(draw.even_count),
+        draw.repeated_from_previous === null
+          ? "Sem concurso anterior no recorte"
+          : String(draw.repeated_from_previous),
+        bands,
       ]);
     }
     historyStatus.textContent = "Histórico carregado.";

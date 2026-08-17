@@ -67,7 +67,9 @@ concurso anterior dentro do recorte e contagem por faixas de dez dezenas. Essas
 métricas descrevem os resultados oficiais armazenados; não predizem sorteios.
 A interface em `/` expõe os filtros de concurso e data, uma visualização de
 intensidade da frequência e uma tabela acessível equivalente com frequência e
-recência por dezena.
+recência por dezena. Ela também apresenta tendências descritivas de soma,
+paridade e repetição em SVG, acompanhadas por uma tabela com os valores exatos e
+a distribuição das dezenas por faixa.
 
 ## Docker
 
