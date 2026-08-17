@@ -46,6 +46,14 @@ mas não altera sua geração. O token informado fica somente no formulário e n
 
 Use `Authorization: Bearer <API_TOKEN>` quando `API_TOKEN` estiver configurado.
 
+Carteiras simples reproduzíveis das quatro modalidades estão disponíveis em
+`POST /api/v1/lotteries/<modalidade>/simple-budget-plan`, com `budget_cents` e
+`seed` no corpo JSON. A resposta usa o snapshot de preços versionado, informa
+custo, saldo e probabilidade exata do prêmio principal, e devolve as
+combinações concretas. No Dia de Sorte, `lucky_month` aparece em
+`extra_selection`, separado das sete dezenas. A geração é limitada a 1.000
+jogos por requisição para manter o endpoint local previsível.
+
 ## Docker
 
 ```bash

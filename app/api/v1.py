@@ -4,6 +4,11 @@ from app.core.security import require_token
 from app.lotteries.catalog import lottery_product_catalog_as_dict
 from app.math_core.budget import budget_result_as_dict, plan_megasena_budget
 from app.math_core.prize_multiplicity import PayoutScenario
+from app.math_core.simple_budget import (
+    MAX_GENERATED_GAMES,
+    plan_simple_lottery_budget,
+    simple_budget_plan_as_dict,
+)
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 
@@ -182,4 +187,67 @@ def megasena_budget_plan():
     return jsonify({
         "api_version": "v1",
         "data": data,
+    })
+
+
+@api_v1.post("/lotteries/<lottery>/simple-budget-plan")
+@require_token
+def simple_lottery_budget_plan(lottery):
+    if not request.is_json:
+        return _validation_error([
+            {"field": "body", "code": "json_required"},
+        ])
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return _validation_error([
+            {"field": "body", "code": "must_be_object"},
+        ])
+
+    details = [
+        {"field": field, "code": "unknown_field"}
+        for field in sorted(set(payload) - {"budget_cents", "seed"})
+    ]
+    if "budget_cents" not in payload:
+        details.append({"field": "budget_cents", "code": "required"})
+    budget_cents, error = _integer_field(
+        payload,
+        "budget_cents",
+        minimum=0,
+    )
+    if error and "budget_cents" in payload:
+        details.append(error)
+    seed, error = _integer_field(payload, "seed", default=42)
+    if error:
+        details.append(error)
+    if details:
+        return _validation_error(details)
+
+    try:
+        plan = plan_simple_lottery_budget(
+            lottery,
+            budget_cents,
+            seed=seed,
+        )
+    except ValueError as exc:
+        if str(exc) == "unknown_lottery":
+            return jsonify({
+                "api_version": "v1",
+                "error": {
+                    "code": "lottery_not_found",
+                    "message": "Lottery is not supported.",
+                    "details": [{"field": "lottery", "value": lottery}],
+                },
+            }), 404
+        if str(exc) == "generation_limit_exceeded":
+            return _validation_error([{
+                "field": "budget_cents",
+                "code": "generation_limit_exceeded",
+                "maximum_generated_games": MAX_GENERATED_GAMES,
+            }])
+        raise
+
+    return jsonify({
+        "api_version": "v1",
+        "data": simple_budget_plan_as_dict(plan),
     })
