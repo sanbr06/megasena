@@ -79,3 +79,26 @@ python -m app.cli backfill --lottery all --start 1
 
 Concursos já existentes no banco são ignorados. O intervalo sem `--end`
 usa o concurso mais recente informado pela CAIXA para cada modalidade.
+
+## Mathematical Core
+
+O núcleo matemático mede a estrutura de uma carteira de jogos sem alegar
+previsão de sorteios.
+
+Métricas iniciais:
+
+- espaço combinatório total;
+- probabilidade exata do prêmio máximo por quantidade de jogos únicos;
+- distribuição exata de acertos para um jogo;
+- duplicidade e sobreposição entre jogos;
+- cobertura de subconjuntos;
+- baseline aleatório reproduzível por seed.
+
+Exemplo:
+
+```bash
+python -m app.math_core.cli   --lottery megasena   --games 20   --seed 42   --subset-size 4
+```
+
+Esse núcleo será a base para Monte Carlo, backtesting e otimização de
+carteiras por orçamento.
