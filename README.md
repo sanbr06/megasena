@@ -356,3 +356,19 @@ Respostas bem-sucedidas usam o envelope `{"api_version": "v1", "data": ...}`.
 Erros de entrada retornam HTTP 400 com `error.code`, `error.message` e uma lista
 `error.details` de campos inválidos. Campos desconhecidos são rejeitados para
 evitar que erros de digitação alterem silenciosamente a análise.
+
+## Strict Walk-Forward Backtesting
+
+O módulo `app.math_core.walk_forward` avalia a heurística histórica de frequência
+sem vazamento de dados futuros. Para cada concurso de teste, o jogo da heurística
+é construído somente com concursos de número menor. Um jogo aleatório
+uniforme, reproduzível por seed, é sempre avaliada nos mesmos concursos.
+
+O relatório mantém separadas as taxas históricas observadas do limiar escolhido,
+a média de acertos e a taxa observada de prêmio máximo. Uma alegação de vantagem
+histórica só é emitida quando o teste pareado binomial exato, calculado sobre os
+resultados discordantes, produz valor-p menor que o nível configurado. Caso
+contrário, o resultado declara `no_evidence_of_historical_advantage`.
+
+Esse backtest mede desempenho histórico fora da amostra. Ele não prevê sorteios
+futuros e não altera a probabilidade matemática de uma combinação individual.
