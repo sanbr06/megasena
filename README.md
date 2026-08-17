@@ -341,6 +341,13 @@ Os valores informados são cenários de análise e não previsões de rateio.
 
 ## Analytical API v1
 
+O catálogo protegido `GET /api/v1/lotteries` expõe as quatro modalidades do
+produto, seus intervalos, tamanho do sorteio e o snapshot de preço simples
+`caixa-2026-08-17`. Em Dia de Sorte, `extra_selection` mantém o "Mês de
+Sorte" explícito e separado das sete dezenas; as demais modalidades retornam
+esse campo como nulo. O catálogo descreve regras de geração e não atribui
+vantagem preditiva a nenhuma modalidade ou seleção.
+
 O planner de orçamento da Mega-Sena está disponível em
 `POST /api/v1/megasena/budget-plan`, com o mesmo bearer token das demais
 rotas protegidas. Valores monetários são inteiros em centavos.

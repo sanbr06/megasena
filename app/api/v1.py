@@ -1,6 +1,7 @@
 from flask import Blueprint, current_app, jsonify, request
 
 from app.core.security import require_token
+from app.lotteries.catalog import lottery_product_catalog_as_dict
 from app.math_core.budget import budget_result_as_dict, plan_megasena_budget
 from app.math_core.prize_multiplicity import PayoutScenario
 
@@ -13,6 +14,17 @@ _REQUEST_FIELDS = {
     "payout_scenario",
 }
 _PAYOUT_FIELDS = {"sena_cents", "quina_cents", "quadra_cents"}
+
+
+@api_v1.get("/lotteries")
+@require_token
+def lotteries():
+    return jsonify({
+        "api_version": "v1",
+        "data": {
+            "lotteries": lottery_product_catalog_as_dict(),
+        },
+    })
 
 
 @api_v1.get("/ready")
