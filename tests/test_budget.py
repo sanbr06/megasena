@@ -4,6 +4,7 @@ import pytest
 
 from app.math_core.budget import (
     MEGASENA_SIMPLE_GAME_COST_CENTS,
+    MEGASENA_TOTAL_OUTCOMES,
     megasena_at_least_hits_probability,
     megasena_system_bet_cost_cents,
     plan_megasena_budget,
@@ -127,6 +128,21 @@ def test_100_reais_uses_96_and_leaves_4():
     assert result.simple_plan.games == 16
     assert result.simple_plan.cost_cents == 9_600
     assert result.simple_plan.unspent_cents == 400
+
+
+def test_simple_plan_stops_after_covering_every_distinct_combination():
+    excess_cents = 1_200
+    budget_cents = (
+        MEGASENA_TOTAL_OUTCOMES * MEGASENA_SIMPLE_GAME_COST_CENTS
+        + excess_cents
+    )
+
+    result = plan_megasena_budget(budget_cents)
+
+    assert result.simple_plan.games == MEGASENA_TOTAL_OUTCOMES
+    assert result.simple_plan.jackpot_probability == 1.0
+    assert result.simple_plan.cost_cents == budget_cents - excess_cents
+    assert result.simple_plan.unspent_cents == excess_cents
 
 
 def test_affordable_system_bets_for_120_reais():

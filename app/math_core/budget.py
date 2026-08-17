@@ -195,9 +195,13 @@ def plan_megasena_budget(
 
     config = LOTTERIES["megasena"]
 
-    games = (
+    affordable_games = (
         budget_cents // MEGASENA_SIMPLE_GAME_COST_CENTS
     )
+    # The plan models distinct simple combinations. Once every possible
+    # combination is covered, another ticket can only duplicate one already
+    # present and cannot increase jackpot probability.
+    games = min(affordable_games, MEGASENA_TOTAL_OUTCOMES)
     cost_cents = (
         games * MEGASENA_SIMPLE_GAME_COST_CENTS
     )
