@@ -155,3 +155,87 @@ def test_budget_plan_requires_existing_bearer_authentication(client):
 
     assert response.status_code == 401
     assert response.json == {"error": "token_required"}
+
+
+@pytest.mark.parametrize(
+    ("lottery", "budget", "cost", "quantity", "maximum"),
+    [
+        ("megasena", 1_300, 600, 6, 60),
+        ("lotofacil", 800, 350, 15, 25),
+        ("quina", 700, 300, 5, 80),
+        ("diadesorte", 600, 250, 7, 31),
+    ],
+)
+def test_simple_budget_plan_generates_supported_lottery_portfolios(
+    client,
+    lottery,
+    budget,
+    cost,
+    quantity,
+    maximum,
+):
+    response = client.post(
+        f"/api/v1/lotteries/{lottery}/simple-budget-plan",
+        json={"budget_cents": budget, "seed": 17},
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    data = response.json["data"]
+    assert data["lottery"] == lottery
+    assert data["pricing_version"] == "caixa-2026-08-17"
+    assert data["games"] == 2
+    assert data["cost_cents"] == 2 * cost
+    assert data["unspent_cents"] == budget - 2 * cost
+    assert data["jackpot_probability"] == pytest.approx(
+        2 / data["total_distinct_combinations"]
+    )
+    assert len(data["generated_games"]) == 2
+    assert all(
+        len(game["numbers"]) == quantity
+        and len(set(game["numbers"])) == quantity
+        and all(1 <= number <= maximum for number in game["numbers"])
+        for game in data["generated_games"]
+    )
+
+
+def test_dia_de_sorte_models_lucky_month_separately_and_reproducibly(client):
+    url = "/api/v1/lotteries/diadesorte/simple-budget-plan"
+    first = client.post(
+        url,
+        json={"budget_cents": 500, "seed": 9},
+        headers=AUTH,
+    )
+    second = client.post(
+        url,
+        json={"budget_cents": 500, "seed": 9},
+        headers=AUTH,
+    )
+
+    assert first.json == second.json
+    games = first.json["data"]["generated_games"]
+    assert games[0]["extra_selection"] == {"lucky_month": "outubro"}
+    assert games[1]["extra_selection"] == {"lucky_month": "novembro"}
+    assert all(len(game["numbers"]) == 7 for game in games)
+
+
+def test_simple_budget_plan_returns_structured_domain_errors(client):
+    unknown = client.post(
+        "/api/v1/lotteries/inexistente/simple-budget-plan",
+        json={"budget_cents": 600},
+        headers=AUTH,
+    )
+    too_large = client.post(
+        "/api/v1/lotteries/quina/simple-budget-plan",
+        json={"budget_cents": 300_300},
+        headers=AUTH,
+    )
+
+    assert unknown.status_code == 404
+    assert unknown.json["error"]["code"] == "lottery_not_found"
+    assert too_large.status_code == 400
+    assert too_large.json["error"]["details"] == [{
+        "field": "budget_cents",
+        "code": "generation_limit_exceeded",
+        "maximum_generated_games": 1_000,
+    }]
