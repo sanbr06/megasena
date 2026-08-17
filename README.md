@@ -172,3 +172,33 @@ python -m app.math_core.scenario_cli   --lottery megasena   --games 20   --candi
 
 O holdout é obrigatório para evitar que uma carteira pareça melhor apenas
 porque foi otimizada sobre os mesmos cenários usados na avaliação.
+
+## Exact Pairwise Prize Dependency
+
+Experimentos com cenários aleatórios não produziram ganho consistente de
+`quadra+` fora da amostra. Por isso, o próximo objetivo deixa de aprender
+sobre amostras simuladas e passa a usar uma quantidade combinatória exata.
+
+Para dois jogos simples, a probabilidade de ambos atingirem um limiar de
+acertos depende apenas da quantidade de dezenas compartilhadas entre eles.
+Essa interseção é calculada exatamente.
+
+Para uma carteira, usamos a expansão de Bonferroni de segunda ordem:
+
+`S1 - S2`
+
+onde `S1` é a soma das probabilidades individuais e `S2` é a soma das
+interseções entre pares. Esse valor é um limite inferior rigoroso para a
+probabilidade de pelo menos um jogo atingir o limiar.
+
+O otimizador procura reduzir `S2`, isto é, reduzir redundância de prêmio
+matematicamente mensurável, em vez de otimizar ruído de cenários aleatórios.
+
+Exemplo:
+
+```bash
+python -m app.math_core.pairwise_cli   --lottery megasena   --games 20   --threshold 4   --candidates 1000   --restarts 20   --trials 500000   --seed 42
+```
+
+O Monte Carlo continua sendo usado como validação independente; a função
+objetivo do otimizador é combinatória e exata.
