@@ -148,3 +148,18 @@ def test_beta_candidate_exposes_keyboard_and_mobile_readiness(client):
     assert b"min-height: 44px" in styles.data
     assert b"@media (max-width: 35rem)" in styles.data
     assert b"grid-template-columns: 1fr" in styles.data
+
+
+
+def test_web_translates_structured_api_validation_errors(client):
+    script = client.get("/static/app.js")
+
+    assert script.status_code == 200
+    assert b"apiErrorMessage" in script.data
+    assert b"validationDetailMessage" in script.data
+    assert b"required_for_repeat_constraint" in script.data
+    assert b"previous_official_result_not_available" in script.data
+    assert "Informe o concurso para usar o filtro de repetição.".encode() in script.data
+    assert "resultado oficial do concurso anterior".encode() in script.data
+    assert "Token da API inválido.".encode() in script.data
+    assert b"payload.error?.message || payload.error" not in script.data
