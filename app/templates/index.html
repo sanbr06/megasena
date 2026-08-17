@@ -25,6 +25,11 @@
         <label for="budget">Valor disponível (R$)</label>
         <input id="budget" name="budget" type="number" min="0" step="0.01" value="120.00" required>
 
+        <label for="seed">Seed de geração</label>
+        <input id="seed" name="seed" type="number" step="1" value="42" required
+               aria-describedby="seed-help">
+        <small id="seed-help">Use o mesmo seed para reproduzir exatamente a mesma carteira.</small>
+
         <label for="token">Token da API</label>
         <input id="token" name="token" type="password" autocomplete="off" required
                aria-describedby="token-help">
@@ -37,13 +42,19 @@
 
     <section id="results" class="panel" aria-labelledby="results-title" hidden>
       <h2 id="results-title">Plano de jogos simples</h2>
+      <p><strong>Mega-Sena · carteira analítica sem vínculo com concurso específico</strong></p>
       <dl class="metrics">
         <div><dt>Orçamento usado</dt><dd id="used-budget"></dd></div>
+        <div><dt>Saldo não utilizado</dt><dd id="unspent-budget"></dd></div>
         <div><dt>Jogos simples</dt><dd id="games"></dd></div>
+        <div><dt>Seed</dt><dd id="used-seed"></dd></div>
         <div><dt>Probabilidade de Sena</dt><dd id="jackpot-probability"></dd></div>
         <div><dt>Probabilidade de qualquer prêmio</dt><dd id="any-prize-probability"></dd></div>
         <div><dt>Probabilidade de prêmios múltiplos</dt><dd id="multiple-prizes-probability"></dd></div>
       </dl>
+      <p id="portfolio-explanation" class="note"></p>
+      <h3 id="generated-games-title">Combinações geradas</h3>
+      <ol id="generated-games" class="game-list" aria-label="Jogos gerados"></ol>
       <p class="note">
         Probabilidade de prêmio, valor esperado, variância e probabilidade de Sena são
         medidas diferentes. Valores de rateio, quando usados, são cenários — não previsões.
