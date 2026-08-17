@@ -1,0 +1,129 @@
+from math import comb
+
+import pytest
+
+from app.math_core.budget import (
+    MEGASENA_SIMPLE_GAME_COST_CENTS,
+    megasena_at_least_hits_probability,
+    megasena_system_bet_cost_cents,
+    plan_megasena_budget,
+    profile_megasena_system_bet,
+)
+
+
+@pytest.mark.parametrize(
+    ("marked_numbers", "expected_cents"),
+    [
+        (6, 600),
+        (7, 4_200),
+        (8, 16_800),
+        (9, 50_400),
+        (10, 126_000),
+        (11, 277_200),
+        (12, 554_400),
+        (13, 1_029_600),
+        (14, 1_801_800),
+        (15, 3_003_000),
+        (16, 4_804_800),
+        (17, 7_425_600),
+        (18, 11_138_400),
+        (19, 16_279_200),
+        (20, 23_256_000),
+    ],
+)
+def test_official_megasena_price_snapshot(
+    marked_numbers,
+    expected_cents,
+):
+    assert (
+        megasena_system_bet_cost_cents(marked_numbers)
+        == expected_cents
+    )
+
+
+def test_system_cost_is_simple_equivalent_count_times_base():
+    for marked_numbers in range(6, 21):
+        assert megasena_system_bet_cost_cents(
+            marked_numbers
+        ) == (
+            comb(marked_numbers, 6)
+            * MEGASENA_SIMPLE_GAME_COST_CENTS
+        )
+
+
+def test_seven_number_bet_has_same_jackpot_as_seven_simples():
+    profile = profile_megasena_system_bet(7)
+
+    assert profile.simple_equivalents == 7
+    assert profile.jackpot_probability == pytest.approx(
+        7 / comb(60, 6)
+    )
+
+
+def test_system_bet_quadraplus_probability_is_exact_hypergeometric():
+    probability = megasena_at_least_hits_probability(
+        7,
+        threshold=4,
+    )
+
+    expected = sum(
+        comb(7, hits) * comb(53, 6 - hits)
+        for hits in range(4, 7)
+    ) / comb(60, 6)
+
+    assert probability == pytest.approx(expected)
+
+
+def test_concentrated_seven_number_bet_has_lower_any_prize_coverage():
+    profile = profile_megasena_system_bet(7)
+
+    assert (
+        profile.quadra_plus_probability
+        < profile.quadra_plus_disjoint_upper_bound
+    )
+    assert (
+        0
+        < profile.quadra_plus_efficiency_vs_disjoint_bound
+        < 1
+    )
+
+
+def test_120_reais_produces_20_game_global_optimum_certificate():
+    result = plan_megasena_budget(
+        12_000,
+        seed=42,
+    )
+
+    plan = result.simple_plan
+
+    assert plan.games == 20
+    assert plan.cost_cents == 12_000
+    assert plan.unspent_cents == 0
+    assert plan.globally_optimal_quadra_plus is True
+    assert plan.max_pairwise_overlap <= 1
+    assert (
+        plan.certified_quadra_plus_probability
+        == pytest.approx(
+            plan.quadra_plus_disjoint_upper_bound
+        )
+    )
+
+
+def test_100_reais_uses_96_and_leaves_4():
+    result = plan_megasena_budget(
+        10_000,
+        seed=42,
+    )
+
+    assert result.simple_plan.games == 16
+    assert result.simple_plan.cost_cents == 9_600
+    assert result.simple_plan.unspent_cents == 400
+
+
+def test_affordable_system_bets_for_120_reais():
+    result = plan_megasena_budget(12_000)
+
+    assert [
+        bet.marked_numbers
+        for bet in result.affordable_single_system_bets
+    ] == [6, 7]
