@@ -297,3 +297,60 @@ historyForm.addEventListener("submit", async (event) => {
     historyStatus.textContent = error.message;
   }
 });
+
+const backtestForm = document.querySelector("#backtest-form");
+const backtestStatus = document.querySelector("#backtest-status");
+const backtestResults = document.querySelector("#backtest-results");
+
+backtestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  backtestResults.hidden = true;
+  backtestStatus.textContent = "Executando backtest sem dados futuros…";
+
+  const lottery = document.querySelector("#backtest-lottery").value;
+  const token = document.querySelector("#token").value;
+  const requestBody = {
+    minimum_training_draws: Number(document.querySelector("#minimum-training-draws").value),
+    threshold: Number(document.querySelector("#backtest-threshold").value),
+    seed: Number(document.querySelector("#backtest-seed").value),
+    significance_level: 0.05,
+  };
+
+  try {
+    const response = await fetch(`/api/v1/lotteries/${lottery}/walk-forward-backtest`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error?.message || payload.error || "Falha ao executar o backtest.");
+    }
+
+    const data = payload.data;
+    document.querySelector("#evidence-statement").textContent = data.evidence_statement;
+    document.querySelector("#backtest-context").textContent =
+      `${lotteryNames[lottery]} · concursos ${data.dataset.contest_from}–${data.dataset.contest_to}`;
+    document.querySelector("#backtest-folds").textContent = String(data.folds.length);
+    document.querySelector("#challenger-rate").textContent =
+      formatProbability(data.challenger_observed_success_rate);
+    document.querySelector("#baseline-rate").textContent =
+      formatProbability(data.baseline_observed_success_rate);
+    document.querySelector("#rate-difference").textContent =
+      formatProbability(data.observed_success_rate_difference);
+    document.querySelector("#paired-p-value").textContent =
+      new Intl.NumberFormat("pt-BR", {maximumFractionDigits: 6}).format(
+        data.paired_one_sided_p_value,
+      );
+    document.querySelector("#backtest-strategies").textContent =
+      `Regra avaliada: ${data.challenger_strategy}. Baseline obrigatório: ${data.baseline_strategy}. Seed: ${data.seed}. Limiar: ${data.threshold} acertos.`;
+    document.querySelector("#backtest-disclaimer").textContent = data.disclaimer;
+    backtestStatus.textContent = "Backtest concluído.";
+    backtestResults.hidden = false;
+  } catch (error) {
+    backtestStatus.textContent = error.message;
+  }
+});

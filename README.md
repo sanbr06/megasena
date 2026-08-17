@@ -71,6 +71,13 @@ recência por dezena. Ela também apresenta tendências descritivas de soma,
 paridade e repetição em SVG, acompanhadas por uma tabela com os valores exatos e
 a distribuição das dezenas por faixa.
 
+O laboratório histórico em `/` executa o backtest walk-forward já disponível em
+`POST /api/v1/lotteries/<modalidade>/walk-forward-backtest`. A regra de frequência
+usa somente concursos anteriores a cada avaliação e é comparada a um baseline
+uniforme reproduzível por seed. A interface mostra taxas observadas, diferença,
+valor-p pareado e a conclusão explícita `SEM EVIDÊNCIA DE VANTAGEM` quando o
+critério estatístico não é atendido. Resultado histórico não é previsão.
+
 ## Docker
 
 ```bash

@@ -16,6 +16,10 @@ def test_home_exposes_minimal_budget_planner(client):
     assert b'id="number-metrics"' in response.data
     assert b'id="draw-trends"' in response.data
     assert b'id="draw-metrics"' in response.data
+    assert b'id="backtest-form"' in response.data
+    assert b'id="evidence-statement"' in response.data
+    assert "baseline uniforme".encode() in response.data
+    assert "não usa dados futuros".encode() in response.data
     assert "Cada série usa sua própria".encode() in response.data
     assert "Padrões".encode() in response.data
     assert b"Simples diversificados" in response.data
@@ -49,6 +53,11 @@ def test_web_assets_are_available(client):
     assert b'renderTrendChart' in script.data
     assert b'draw.repeated_from_previous' in script.data
     assert b'draw.band_counts' in script.data
+    assert b'/walk-forward-backtest' in script.data
+    assert b'data.evidence_statement' in script.data
+    assert b'data.challenger_observed_success_rate' in script.data
+    assert b'data.baseline_observed_success_rate' in script.data
+    assert b'data.paired_one_sided_p_value' in script.data
     assert manifest.status_code == 200
     assert manifest.json["start_url"] == "/"
     assert manifest.json["display"] == "standalone"
