@@ -113,6 +113,9 @@ oficial já armazenado para o mesmo concurso. Enquanto ele não existe localment
 o status fica `awaiting_result`; após a conferência, fica `checked` e a resposta
 traz acertos, faixa numérica e eventos prontos para notificação. No Dia de Sorte,
 o Mês de Sorte é conferido separadamente. Valores de rateio não são inferidos.
+`GET /api/v1/portfolios` lista as carteiras locais mais recentes. A interface em
+`/` permite salvar a carteira gerada, listar as carteiras desta instalação e
+acionar a conferência do resultado sem persistir o Bearer token no navegador.
 
 ## Docker
 

@@ -330,7 +330,9 @@ form.addEventListener("submit", async (event) => {
       contestNumber: context.contest_number,
       seed: context.seed,
       pricingVersion: plan.pricing_version,
+      simpleGameCostCents: plan.simple_game_cost_cents,
       costCents: plan.cost_cents,
+      generationConstraints: plan.generation_constraints || {},
       games: normalizedGames,
     };
     document.querySelector("#portfolio-actions").hidden = portablePortfolio === null;
@@ -357,6 +359,133 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+const apiToken = () => document.querySelector("#token").value;
+
+const savedPortfolioRequest = (portfolio) => ({
+  lottery: portfolio.lottery,
+  contest: portfolio.contestNumber,
+  games: portfolio.games.map((game) => ({
+    numbers: game.numbers,
+    extra_selection: game.extraSelection,
+  })),
+  strategy: {
+    name: "portfolio-planner",
+    version: "v2.6-ui",
+    parameters: portfolio.generationConstraints,
+  },
+  seed: portfolio.seed,
+  cost_snapshot: {
+    pricing_version: portfolio.pricingVersion,
+    simple_game_cost_cents: portfolio.simpleGameCostCents,
+    total_cost_cents: portfolio.costCents,
+  },
+});
+
+const renderSavedPortfolioCheck = (portfolioId, data) => {
+  const section = document.querySelector("#saved-portfolio-check");
+  const context = document.querySelector("#saved-portfolio-check-context");
+  const events = document.querySelector("#saved-portfolio-events");
+  events.replaceChildren();
+  section.hidden = false;
+
+  if (data.check === null) {
+    context.textContent = `Carteira #${portfolioId}: ${data.message}`;
+    return;
+  }
+
+  context.textContent =
+    `Carteira #${portfolioId}: resultado conferido. Rateios não são inferidos.`;
+  if ((data.check.events || []).length === 0) {
+    const item = document.createElement("li");
+    item.textContent = "Nenhum evento de faixa foi identificado para esta carteira.";
+    events.append(item);
+    return;
+  }
+  for (const checkEvent of data.check.events) {
+    const item = document.createElement("li");
+    item.textContent = checkEvent.message;
+    events.append(item);
+  }
+};
+
+const checkSavedPortfolio = async (portfolioId, lottery) => {
+  const savedStatus = document.querySelector("#saved-portfolios-status");
+  savedStatus.textContent = `Conferindo carteira #${portfolioId}…`;
+  try {
+    const response = await fetch(`/api/v1/portfolios/${portfolioId}/check`, {
+      method: "POST",
+      headers: {"Authorization": `Bearer ${apiToken()}`},
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        payload.error?.message || payload.error || "Falha ao conferir a carteira.",
+      );
+    }
+    renderSavedPortfolioCheck(portfolioId, payload.data);
+    savedStatus.textContent = "Conferência concluída.";
+    emitBetaFunnelEvent("portfolio_result_checked", lottery);
+    await loadSavedPortfolios();
+  } catch (error) {
+    savedStatus.textContent = error.message;
+  }
+};
+
+const renderSavedPortfolios = (portfolios) => {
+  const body = document.querySelector("#saved-portfolios-body");
+  body.replaceChildren();
+
+  for (const portfolio of portfolios) {
+    const row = document.createElement("tr");
+    const values = [
+      String(portfolio.id),
+      lotteryNames[portfolio.lottery] || portfolio.lottery,
+      String(portfolio.contest),
+      String(portfolio.games.length),
+      formatMoney(portfolio.cost_snapshot.total_cost_cents),
+      portfolio.status,
+      portfolio.created_at,
+    ];
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    const actionCell = document.createElement("td");
+    const checkButton = document.createElement("button");
+    checkButton.type = "button";
+    checkButton.textContent = "Conferir";
+    checkButton.addEventListener("click", () => {
+      checkSavedPortfolio(portfolio.id, portfolio.lottery);
+    });
+    actionCell.append(checkButton);
+    row.append(actionCell);
+    body.append(row);
+  }
+};
+
+const loadSavedPortfolios = async () => {
+  const savedStatus = document.querySelector("#saved-portfolios-status");
+  savedStatus.textContent = "Carregando carteiras…";
+  try {
+    const response = await fetch("/api/v1/portfolios", {
+      headers: {"Authorization": `Bearer ${apiToken()}`},
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        payload.error?.message || payload.error || "Falha ao carregar as carteiras.",
+      );
+    }
+    renderSavedPortfolios(payload.data);
+    savedStatus.textContent = payload.data.length === 0
+      ? "Nenhuma carteira salva nesta instalação."
+      : `${payload.data.length} carteira(s) carregada(s).`;
+  } catch (error) {
+    savedStatus.textContent = error.message;
+  }
+};
+
 document.querySelector("#copy-games").addEventListener("click", async () => {
   if (portablePortfolio === null) return;
   const actionStatus = document.querySelector("#portfolio-action-status");
@@ -382,6 +511,45 @@ document.querySelector("#export-csv").addEventListener("click", () => {
   document.querySelector("#portfolio-action-status").textContent = "Arquivo CSV preparado.";
   emitBetaFunnelEvent("portfolio_exported_csv", portablePortfolio.lottery);
 });
+
+document.querySelector("#save-portfolio").addEventListener("click", async () => {
+  if (portablePortfolio === null) return;
+  const actionStatus = document.querySelector("#portfolio-action-status");
+  if (portablePortfolio.contestNumber === null) {
+    actionStatus.textContent =
+      "Informe o concurso e gere novamente a carteira antes de salvá-la para acompanhamento.";
+    return;
+  }
+
+  actionStatus.textContent = "Salvando carteira…";
+  try {
+    const response = await fetch("/api/v1/portfolios", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(savedPortfolioRequest(portablePortfolio)),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        payload.error?.message || payload.error || "Falha ao salvar a carteira.",
+      );
+    }
+    actionStatus.textContent =
+      `Carteira #${payload.data.id} salva para o concurso ${payload.data.contest}.`;
+    emitBetaFunnelEvent("portfolio_saved", portablePortfolio.lottery);
+    await loadSavedPortfolios();
+  } catch (error) {
+    actionStatus.textContent = error.message;
+  }
+});
+
+document.querySelector("#refresh-saved-portfolios").addEventListener(
+  "click",
+  loadSavedPortfolios,
+);
 
 document.querySelector("#caixa-handoff").addEventListener("click", () => {
   if (portablePortfolio === null) return;

@@ -126,6 +126,7 @@
           <button id="copy-games" type="button">Copiar jogos</button>
           <button id="export-txt" type="button">Exportar TXT</button>
           <button id="export-csv" type="button">Exportar CSV</button>
+          <button id="save-portfolio" type="button">Salvar carteira</button>
           <a id="caixa-handoff" class="button-link" href="https://loterias.caixa.gov.br/"
              target="_blank" rel="noopener noreferrer">Abrir página oficial da CAIXA</a>
         </div>
@@ -167,6 +168,43 @@
         Métricas que dependem de um certificado exato são identificadas quando a carteira
         está fora do limite certificado.
       </p>
+    </section>
+
+    <section class="panel" aria-labelledby="saved-portfolios-title">
+      <h2 id="saved-portfolios-title">Minhas carteiras salvas</h2>
+      <p class="note">
+        As carteiras são persistidas nesta instalação local e continuam separadas dos
+        resultados oficiais. Salvar uma carteira não registra uma aposta na CAIXA.
+        Para acompanhar um resultado, a carteira precisa estar associada a um concurso.
+      </p>
+      <button id="refresh-saved-portfolios" type="button">Atualizar carteiras salvas</button>
+      <p id="saved-portfolios-status" role="status" aria-live="polite"></p>
+      <div class="table-scroll" tabindex="0" aria-label="Carteiras salvas nesta instalação">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Modalidade</th>
+              <th scope="col">Concurso</th>
+              <th scope="col">Jogos</th>
+              <th scope="col">Custo</th>
+              <th scope="col">Status</th>
+              <th scope="col">Criada em</th>
+              <th scope="col">Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="saved-portfolios-body"></tbody>
+        </table>
+      </div>
+      <div id="saved-portfolio-check" hidden>
+        <h3>Última conferência</h3>
+        <p id="saved-portfolio-check-context"></p>
+        <ul id="saved-portfolio-events"></ul>
+        <p class="note">
+          A conferência usa o resultado oficial armazenado. Valores de rateio não são
+          inferidos; confirme qualquer premiação no comprovante e nos canais oficiais.
+        </p>
+      </div>
     </section>
 
     <section class="panel" aria-labelledby="history-title">
