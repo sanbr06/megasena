@@ -326,3 +326,27 @@ python -m app.math_core.risk_cli \
 ```
 
 Os valores informados são cenários de análise e não previsões de rateio.
+
+## Analytical API v1
+
+O planner de orçamento da Mega-Sena está disponível em
+`POST /api/v1/megasena/budget-plan`, com o mesmo bearer token das demais
+rotas protegidas. Valores monetários são inteiros em centavos.
+
+```json
+{
+  "budget_cents": 12000,
+  "seed": 42,
+  "certificate_game_limit": 20
+}
+```
+
+Um cenário opcional de pagamentos pode ser informado em `payout_scenario`
+com `sena_cents`, `quina_cents` e `quadra_cents`. Esses valores são hipóteses
+analíticas, não previsões de rateios. A resposta separa probabilidade de Sena,
+probabilidade de qualquer prêmio, multiplicidade, valor esperado e variância.
+
+Respostas bem-sucedidas usam o envelope `{"api_version": "v1", "data": ...}`.
+Erros de entrada retornam HTTP 400 com `error.code`, `error.message` e uma lista
+`error.details` de campos inválidos. Campos desconhecidos são rejeitados para
+evitar que erros de digitação alterem silenciosamente a análise.

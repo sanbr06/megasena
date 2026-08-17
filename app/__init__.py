@@ -1,6 +1,7 @@
 from flask import Flask
 
 from app.api.routes import api
+from app.api.v1 import api_v1
 from app.core.config import settings
 from app.providers.caixa import CaixaLotteryProvider
 from app.repositories.result_repository import ResultRepository
@@ -40,5 +41,6 @@ def create_app(test_config=None):
     app.extensions["result_service"] = result_service
     app.extensions["lottery_service"] = lottery_service
     app.register_blueprint(api)
+    app.register_blueprint(api_v1)
 
     return app
