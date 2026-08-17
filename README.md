@@ -65,6 +65,9 @@ O explorador histórico descritivo está disponível em
 retorna frequência/recência por dezena, soma, paridade, repetição em relação ao
 concurso anterior dentro do recorte e contagem por faixas de dez dezenas. Essas
 métricas descrevem os resultados oficiais armazenados; não predizem sorteios.
+A interface em `/` expõe os filtros de concurso e data, uma visualização de
+intensidade da frequência e uma tabela acessível equivalente com frequência e
+recência por dezena.
 
 ## Docker
 
