@@ -84,3 +84,28 @@ def test_web_assets_are_available(client):
     assert manifest.status_code == 200
     assert manifest.json["start_url"] == "/"
     assert manifest.json["display"] == "standalone"
+
+
+def test_web_javascript_exposes_privacy_preserving_beta_funnel_hooks(client):
+    script = client.get("/static/app.js")
+
+    assert script.status_code == 200
+    assert b"megasena:beta-funnel" in script.data
+    assert b"beta-funnel/v1" in script.data
+    for event in (
+        b"portfolio_generated",
+        b"portfolio_copied",
+        b"portfolio_exported_txt",
+        b"portfolio_exported_csv",
+        b"official_handoff_opened",
+        b"history_explored",
+        b"walk_forward_completed",
+    ):
+        assert event in script.data
+
+    hook_source = script.data.split(
+        b"const emitBetaFunnelEvent", maxsplit=1
+    )[1].split(b"let portablePortfolio", maxsplit=1)[0]
+    assert b"token" not in hook_source
+    assert b"budget" not in hook_source
+    assert b"numbers" not in hook_source

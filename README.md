@@ -51,6 +51,11 @@ impede a geração quando o orçamento solicitado é maior. Termos e privacidade
 versão beta são rascunhos explicitamente sujeitos a revisão jurídica antes de um
 lançamento público.
 
+Para instrumentação local do funil beta, a página emite o evento de navegador
+`megasena:beta-funnel` com schema `beta-funnel/v1`. O payload contém somente o nome
+do evento e a modalidade; não inclui token, orçamento, dezenas ou outros dados da
+carteira, não é persistido e não é enviado a nenhum serviço externo.
+
 As carteiras concretas podem ser copiadas ou exportadas em TXT/CSV com modalidade,
 concurso, seed, versão de preços e custo. A interface também oferece um link para a
 página oficial da modalidade na CAIXA. Essas ações não registram aposta: a conferência
