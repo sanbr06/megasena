@@ -130,3 +130,12 @@ class ResultRepository:
             ).fetchone()
 
         return int(row["total"])
+
+    def is_ready(self):
+        try:
+            with self._connect() as conn:
+                row = conn.execute("SELECT 1 AS ready").fetchone()
+        except sqlite3.Error:
+            return False
+
+        return row is not None and row["ready"] == 1

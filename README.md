@@ -357,6 +357,11 @@ Erros de entrada retornam HTTP 400 com `error.code`, `error.message` e uma lista
 `error.details` de campos inválidos. Campos desconhecidos são rejeitados para
 evitar que erros de digitação alterem silenciosamente a análise.
 
+`GET /health` é uma verificação pública de processo (liveness). A verificação
+pública `GET /api/v1/ready` confirma também o acesso ao banco local e usa o
+envelope v1; enquanto o banco estiver indisponível, responde HTTP 503 com o
+código estruturado `service_unavailable`.
+
 ## Strict Walk-Forward Backtesting
 
 O módulo `app.math_core.walk_forward` avalia a heurística histórica de frequência
