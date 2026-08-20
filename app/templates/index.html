@@ -18,10 +18,9 @@
       <span class="brand-name">Joga Certo</span>
     </button>
     <div class="top-nav-links">
-      <button type="button" data-nav="screen-planner">Planejar</button>
+      <button type="button" data-nav="screen-planner">Meus Números</button>
       <a href="#saved-portfolios-title">Carteiras</a>
       <a href="#history-title">Histórico</a>
-      <a href="#backtest-title">Laboratório</a>
     </div>
   </nav>
   <main id="main-content">
@@ -55,7 +54,7 @@
           <span><strong>18+ · Aposta não é investimento.</strong> Defina um limite que caiba no seu orçamento. Não tente recuperar perdas.</span>
         </aside>
         <button type="button" class="btn-cta" data-nav="screen-planner">
-          Começar
+          Escolher meus números
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
         </button>
       </div>
@@ -416,11 +415,26 @@
           </table>
         </div>
         <p id="history-disclaimer" class="note"></p>
+        <p class="note">
+          Curioso se dá pra confiar numa regra baseada nesse histórico? Veja o
+          <a href="#backtest-title">teste de estratégias (avançado)</a>.
+        </p>
       </div>
     </section>
 
     <section class="panel" aria-labelledby="backtest-title">
-      <h2 id="backtest-title">Laboratório histórico</h2>
+      <h2 id="backtest-title">Teste de estratégias (avançado)</h2>
+      <div class="callout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <div>
+          <p>
+            Isso não escolhe seus números. É um teste estatístico que compara uma regra baseada
+            no histórico com um sorteio aleatório, pra mostrar se vale a pena confiar nela — o
+            resultado mais comum é "não há vantagem", e está tudo certo se for esse o caso.
+          </p>
+          <button type="button" class="callout-action" data-nav="screen-planner">Ir para Meus Números</button>
+        </div>
+      </div>
       <p class="note">
         Compara, concurso a concurso, uma regra baseada nas frequências anteriores com um jogo
         aleatório de referência. O teste é descritivo, não usa dados futuros e não prevê o
@@ -438,18 +452,33 @@
         <div class="filter-grid">
           <div>
             <label for="minimum-training-draws">Concursos iniciais para treino</label>
-            <input id="minimum-training-draws" type="number" min="1" step="1" value="20" required>
+            <input id="minimum-training-draws" type="number" min="1" step="1" value="20" required
+                   aria-describedby="minimum-training-draws-help">
+            <small id="minimum-training-draws-help">
+              Quantos sorteios mais antigos usamos só pra calibrar a regra, antes de começar a
+              testar de verdade.
+            </small>
           </div>
           <div>
             <label for="backtest-threshold">Limiar de acertos</label>
-            <input id="backtest-threshold" type="number" min="1" step="1" value="4" required>
+            <input id="backtest-threshold" type="number" min="1" step="1" value="4" required
+                   aria-describedby="backtest-threshold-help">
+            <small id="backtest-threshold-help">
+              A partir de quantos números certos contamos como "acerto" neste teste — 4 significa
+              Quadra ou mais.
+            </small>
           </div>
           <div>
             <label for="backtest-seed">Seed do baseline</label>
-            <input id="backtest-seed" type="number" step="1" value="42" required>
+            <input id="backtest-seed" type="number" step="1" value="42" required
+                   aria-describedby="backtest-seed-help">
+            <small id="backtest-seed-help">
+              Trava o sorteio aleatório usado como comparação, pra poder repetir exatamente o
+              mesmo teste depois.
+            </small>
           </div>
         </div>
-        <button type="submit">Executar backtest</button>
+        <button type="submit">Executar teste</button>
       </form>
       <p id="backtest-status" role="status" aria-live="polite"></p>
 
