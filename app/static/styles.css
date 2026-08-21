@@ -157,6 +157,18 @@ h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; marg
 .responsible-play strong { color: var(--primary-dark); font-weight: 700; }
 .responsible-play span { font-size: .85rem; color: var(--primary-dark); }
 
+.callout {
+  display: flex; align-items: flex-start; gap: .7rem; background: var(--primary-soft);
+  border-radius: var(--radius-sm); padding: 1rem 1.1rem; margin: 0 0 1.1rem;
+}
+.callout svg { color: var(--primary); flex-shrink: 0; margin-top: .15rem; }
+.callout p { margin: 0 0 .7rem; font-size: .88rem; line-height: 1.55; color: var(--primary-dark); }
+.callout-action {
+  width: auto; min-height: auto; margin: 0; padding: .55rem 1.1rem; font-size: .82rem;
+  background: var(--primary); color: white; box-shadow: none;
+}
+.callout-action:hover { background: var(--primary-dark); }
+
 /* Panels */
 .panel {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
